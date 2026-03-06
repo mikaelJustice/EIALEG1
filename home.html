@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Stats – EIA League{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1 ><i class="bi bi-bar-chart me-3"></i>Top Scorers & Stats</h1>
+        <p style="margin:0.5rem 0 0 0; font-size:0.95rem;">EIA Football Tournament</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row g-4">
+
+        <!-- TOP SCORERS -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <i class="bi bi-medal me-2" style="color:var(--lime)"></i>
+                    Top Scorers
+                </div>
+                <div class="card-body p-0">
+                    {% if top_scorers %}
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:35px">#</th>
+                                <th>Player</th>
+                                <th>Team</th>
+                                <th class="text-center">Pos</th>
+                                <th class="text-center">⚽</th>
+                                <th class="text-center">🅰️</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in top_scorers %}
+                            <tr {% if loop.index == 1 %}style="border-left:3px solid var(--gold)"{% elif loop.index <= 3 %}style="border-left:3px solid var(--lime)"{% endif %}>
+                                <td class="fw-bold text-center" style="color:#1a2f4f; font-size:1.1rem;">
+                                    {% if loop.index == 1 %}<span>🥇</span>
+                                    {% elif loop.index == 2 %}<span>🥈</span>
+                                    {% elif loop.index == 3 %}<span>🥉</span>
+                                    {% else %}{{ loop.index }}{% endif %}
+                                </td>
+                                <td class="fw-semibold" style="color:#1a2f4f;">{{ p.name }}</td>
+                                <td>
+                                    {% if p.team_name %}
+                                    <span class="team-badge me-1" style="background:{{ p.team_color }};width:20px;height:20px;font-size:0.55rem">{{ p.team_name[:2] }}</span>
+                                    <small>{{ p.team_name }}</small>
+                                    {% else %}<small class="text-muted">–</small>{% endif %}
+                                </td>
+                                <td class="text-center"><span class="badge-position pos-{{ p.position }}">{{ p.position }}</span></td>
+                                <td class="text-center fw-bold" style="color:var(--lime)">{{ p.goals }}</td>
+                                <td class="text-center text-muted">{{ p.assists }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="bi bi-trophy fs-1 d-block mb-3"></i>
+                        <p>No goals scored yet in the {{ league }} league.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- YELLOW CARD LEADERS -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span style="color:var(--gold)">🟨</span>
+                    <span class="ms-2">Most Yellow Cards</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if most_yellows %}
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:35px">#</th>
+                                <th>Player</th>
+                                <th>Team</th>
+                                <th class="text-center">🟨</th>
+                                <th class="text-center">🟥</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in most_yellows %}
+                            <tr>
+                                <td class="text-center text-muted">{{ loop.index }}</td>
+                                <td class="fw-semibold text-white">{{ p.name }}</td>
+                                <td>
+                                    {% if p.team_name %}
+                                    <span class="team-badge me-1" style="background:{{ p.team_color }};width:20px;height:20px;font-size:0.55rem">{{ p.team_name[:2] }}</span>
+                                    <small>{{ p.team_name }}</small>
+                                    {% else %}<small class="text-muted">–</small>{% endif %}
+                                </td>
+                                <td class="text-center fw-bold" style="color:var(--gold)">{{ p.yellow_cards }}</td>
+                                <td class="text-center text-danger">{{ p.red_cards }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="bi bi-square fs-1 d-block mb-3"></i>
+                        <p>No yellow cards recorded yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Fixtures – EIA Football League{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Fixtures</h1>
+        <p style="font-size:0.78rem; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:0.12em; margin:6px 0 0;">{{ league|capitalize }} League · Upcoming Matches</p>
+    </div>
+</div>
+
+<!-- League switcher -->
+<div style="background:white; border-bottom:2px solid rgba(26,31,94,0.08);">
+    <div class="container">
+        <div style="display:flex; gap:0;">
+            <a href="{{ url_for('public.fixtures', league='boys') }}"
+               style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.12em; text-transform:uppercase; padding:14px 28px; text-decoration:none; border-bottom:3px solid {% if league=='boys' %}var(--lime){% else %}transparent{% endif %}; color:{% if league=='boys' %}var(--navy){% else %}var(--grey){% endif %}; margin-bottom:-2px;">
+                Boys League
+            </a>
+            <a href="{{ url_for('public.fixtures', league='girls') }}"
+               style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.12em; text-transform:uppercase; padding:14px 28px; text-decoration:none; border-bottom:3px solid {% if league=='girls' %}var(--lime){% else %}transparent{% endif %}; color:{% if league=='girls' %}var(--navy){% else %}var(--grey){% endif %}; margin-bottom:-2px;">
+                Girls League
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-top:32px; padding-bottom:60px;">
+    {% if fixtures %}
+        {% set current_day = namespace(day=None) %}
+        {% for entry in fixtures %}
+        {% set match = entry.match %}
+        {% if match.match_date[:10] != current_day.day %}
+            {% set current_day.day = match.match_date[:10] %}
+            <div style="font-family:'Barlow Condensed',sans-serif; font-size:0.78rem; font-weight:800; letter-spacing:0.16em; text-transform:uppercase; color:var(--grey); padding:20px 0 10px;">
+                <span style="color:var(--lime); margin-right:6px;">◆</span>{{ match.match_date[:10] }}
+                {% if match.matchday %}<span style="margin-left:12px; font-size:0.7rem; background:rgba(26,31,94,0.07); color:var(--navy); padding:3px 10px; border-radius:2px;">Matchday {{ match.matchday }}</span>{% endif %}
+            </div>
+        {% endif %}
+
+        <div class="card" style="margin-bottom:16px; overflow:hidden;">
+            <!-- Match header row -->
+            <div style="padding:24px 28px;">
+                <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px;">
+                    <!-- Home team -->
+                    <div style="display:flex; align-items:center; gap:14px; justify-content:flex-end;">
+                        <div style="text-align:right;">
+                            <a href="{{ url_for('public.team_detail', team_id=match.home_team_id) }}"
+                               style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.25rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--navy); text-decoration:none;">{{ match.home_name }}</a>
+                        </div>
+                        <div class="team-badge" style="background:{{ match.home_color }}; width:48px; height:48px; font-size:0.85rem; flex-shrink:0;">{{ match.home_short }}</div>
+                    </div>
+
+                    <!-- VS box -->
+                    <div style="text-align:center; min-width:100px;">
+                        <div style="font-size:0.68rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--grey); margin-bottom:6px;">{{ match.match_date[11:16] if match.match_date|length > 10 else 'TBD' }}</div>
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.5rem; color:var(--grey); padding:6px 20px; background:rgba(26,31,94,0.05); border-radius:3px; letter-spacing:0.1em;">VS</div>
+                        {% if match.venue %}<div style="font-size:0.68rem; color:var(--grey); margin-top:6px;">{{ match.venue }}</div>{% endif %}
+                    </div>
+
+                    <!-- Away team -->
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        <div class="team-badge" style="background:{{ match.away_color }}; width:48px; height:48px; font-size:0.85rem; flex-shrink:0;">{{ match.away_short }}</div>
+                        <div>
+                            <a href="{{ url_for('public.team_detail', team_id=match.away_team_id) }}"
+                               style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.25rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--navy); text-decoration:none;">{{ match.away_name }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LINEUPS (if submitted) -->
+            {% if entry.has_lineups %}
+            <div style="border-top:2px solid rgba(26,31,94,0.06); background:rgba(26,31,94,0.02);">
+                <div style="padding:10px 28px; border-bottom:1px solid rgba(26,31,94,0.06);">
+                    <span style="font-family:'Barlow Condensed',sans-serif; font-size:0.72rem; font-weight:800; letter-spacing:0.14em; text-transform:uppercase; color:var(--grey);">
+                        <span style="color:var(--lime);">◆</span> Lineups Submitted
+                    </span>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 60px 1fr; gap:0;">
+
+                    <!-- HOME LINEUP -->
+                    <div style="padding:20px 24px;">
+                        {% if entry.home_lineup %}
+                        <div style="font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--grey); margin-bottom:12px;">
+                            {{ match.home_name }} · <span style="color:var(--navy);">{{ entry.formation_home }}</span>
+                        </div>
+                        {{ lineup_display(entry.home_lineup, match.home_color) }}
+                        {% else %}
+                        <div style="padding:20px 0; text-align:center; color:var(--grey); font-size:0.8rem; font-style:italic;">Lineup not submitted</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- DIVIDER -->
+                    <div style="display:flex; align-items:center; justify-content:center; border-left:1px solid rgba(26,31,94,0.07); border-right:1px solid rgba(26,31,94,0.07);">
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:0.8rem; color:var(--grey); writing-mode:vertical-rl; transform:rotate(180deg); letter-spacing:0.1em;">LINEUPS</div>
+                    </div>
+
+                    <!-- AWAY LINEUP -->
+                    <div style="padding:20px 24px;">
+                        {% if entry.away_lineup %}
+                        <div style="font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--grey); margin-bottom:12px;">
+                            {{ match.away_name }} · <span style="color:var(--navy);">{{ entry.formation_away }}</span>
+                        </div>
+                        {{ lineup_display(entry.away_lineup, match.away_color) }}
+                        {% else %}
+                        <div style="padding:20px 0; text-align:center; color:var(--grey); font-size:0.8rem; font-style:italic;">Lineup not submitted</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="card">
+        <div style="padding:60px; text-align:center; color:var(--grey);">
+            <div style="font-family:'Barlow Condensed',sans-serif; font-size:1.2rem; font-weight:700; text-transform:uppercase; margin-bottom:8px;">No fixtures scheduled</div>
+            <p style="font-size:0.85rem;">Check back soon for upcoming matches.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% macro lineup_display(lineup, team_color) %}
+<div style="display:flex; flex-wrap:wrap; gap:4px;">
+    {% for p in lineup %}
+    <div style="display:flex; align-items:center; gap:6px; width:calc(50% - 2px); margin-bottom:3px;">
+        <div style="width:26px; height:26px; border-radius:50%; background:{{ team_color }}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <span style="font-family:'Barlow Condensed',sans-serif; font-size:0.75rem; font-weight:900; color:white;">{{ p.shirt_number or loop.index }}</span>
+        </div>
+        <div style="min-width:0;">
+            <div style="font-size:0.78rem; font-weight:700; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ p.player_name }}</div>
+            <div style="font-size:0.62rem; color:var(--grey); text-transform:uppercase; letter-spacing:0.06em;">{{ p.player_pos }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% endblock %}

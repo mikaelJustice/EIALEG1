@@ -1,0 +1,119 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin Dashboard – School Football League{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="font-family:'Barlow Condensed',sans-serif;color:var(--lime);letter-spacing:2px;font-size:2rem">
+        <i class="bi bi-speedometer2 me-3"></i>Dashboard
+    </h2>
+    <small class="text-muted">Welcome back, {{ session.username }}</small>
+</div>
+
+<!-- STATS CARDS -->
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card text-center p-3">
+            <div style="font-size:2.5rem;color:var(--lime)"><i class="bi bi-shield-fill"></i></div>
+            <div class="fs-2 fw-bold text-white mt-1">{{ stats.teams }}</div>
+            <div class="text-muted small">Teams</div>
+            <a href="{{ url_for('admin.teams') }}" class="btn btn-sm btn-outline-secondary mt-2">Manage</a>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card text-center p-3">
+            <div style="font-size:2.5rem;color:#2980b9"><i class="bi bi-person-fill"></i></div>
+            <div class="fs-2 fw-bold text-white mt-1">{{ stats.players }}</div>
+            <div class="text-muted small">Players</div>
+            <a href="{{ url_for('admin.players') }}" class="btn btn-sm btn-outline-secondary mt-2">Manage</a>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card text-center p-3">
+            <div style="font-size:2.5rem;color:var(--gold)"><i class="bi bi-calendar-check"></i></div>
+            <div class="fs-2 fw-bold text-white mt-1">{{ stats.matches_played }}</div>
+            <div class="text-muted small">Matches Played</div>
+            <a href="{{ url_for('admin.matches') }}" class="btn btn-sm btn-outline-secondary mt-2">Manage</a>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card text-center p-3">
+            <div style="font-size:2.5rem;color:var(--red)"><i class="bi bi-arrow-left-right"></i></div>
+            <div class="fs-2 fw-bold text-white mt-1">{{ stats.pending_transfers }}</div>
+            <div class="text-muted small">Pending Transfers</div>
+            <a href="{{ url_for('admin.transfers') }}" class="btn btn-sm btn-outline-secondary mt-2">Review</a>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-lightning me-2" style="color:var(--lime)"></i>Quick Actions</div>
+            <div class="card-body d-flex flex-wrap gap-2">
+                <a href="{{ url_for('admin.add_team') }}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-plus me-1"></i>Add Team
+                </a>
+                <a href="{{ url_for('admin.add_player') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-plus me-1"></i>Add Player
+                </a>
+                <a href="{{ url_for('admin.add_match') }}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-plus me-1"></i>Create Fixture
+                </a>
+                <a href="{{ url_for('admin.add_news') }}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-plus me-1"></i>Post News
+                </a>
+                <a href="{{ url_for('admin.transfers') }}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-arrow-left-right me-1"></i>Review Transfers
+                </a>
+                <a href="{{ url_for('admin.add_user') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-person-plus me-1"></i>Add User
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PENDING TRANSFERS -->
+{% if recent_transfers %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <span><i class="bi bi-clock-history me-2" style="color:var(--gold)"></i>Pending Transfers</span>
+        <a href="{{ url_for('admin.transfers') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Player</th><th>From</th><th>To</th>
+                        <th class="text-center">Fee</th>
+                        <th>Requested By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in recent_transfers %}
+                    <tr>
+                        <td class="fw-semibold">{{ t.player_name }}</td>
+                        <td class="text-muted">{{ t.from_team or 'Free Agent' }}</td>
+                        <td>{{ t.to_team }}</td>
+                        <td class="text-center" style="color:var(--gold)">£{{ '{:,.0f}'.format(t.fee) }}</td>
+                        <td class="text-muted">{{ t.captain }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin.approve_transfer', transfer_id=t.id) }}" class="d-inline">
+                                <button class="btn btn-xs btn-success btn-sm py-0 px-2">✓ Approve</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.reject_transfer', transfer_id=t.id) }}" class="d-inline ms-1">
+                                <button class="btn btn-xs btn-danger btn-sm py-0 px-2">✗ Reject</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

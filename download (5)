@@ -1,0 +1,147 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ action }} Player – Admin{% endblock %}
+
+{% block admin_content %}
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;">
+    <div>
+        <h2 style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:2rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--navy); margin:0;">
+            {{ action }} <span style="color:var(--lime);">Player</span>
+        </h2>
+    </div>
+    <a href="{{ url_for('admin.players', league=league) }}" style="display:inline-flex; align-items:center; gap:8px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.82rem; letter-spacing:0.1em; text-transform:uppercase; padding:9px 18px; border:1.5px solid rgba(26,31,94,0.2); border-radius:3px; color:var(--navy); text-decoration:none; background:white;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+    </a>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+    <div class="row g-4">
+
+        <!-- LEFT: Player photo -->
+        <div class="col-lg-3">
+            <div class="card" style="text-align:center; padding:24px;">
+                <!-- Photo preview / current -->
+                <div id="photoCircle" style="width:120px; height:120px; border-radius:50%; margin:0 auto 16px; overflow:hidden; border:3px solid var(--lime); background:rgba(26,31,94,0.08); display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="document.getElementById('photoInput').click()">
+                    {% if player and player.photo_url %}
+                    <img id="photoPreview" src="{{ player.photo_url }}" style="width:100%; height:100%; object-fit:cover;" alt="Player photo">
+                    {% else %}
+                    <div id="photoPlaceholder">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(26,31,94,0.3)" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        <img id="photoPreview" style="display:none; width:100%; height:100%; object-fit:cover;" alt="">
+                    </div>
+                    {% endif %}
+                </div>
+                <input type="file" name="photo" id="photoInput" accept="image/*" style="display:none;" onchange="previewPhoto(this)">
+                <button type="button" onclick="document.getElementById('photoInput').click()" style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; padding:8px 16px; background:rgba(26,31,94,0.07); border:none; border-radius:3px; cursor:pointer; color:var(--navy); width:100%;">
+                    Upload Photo
+                </button>
+                <div style="font-size:0.68rem; color:var(--grey); margin-top:6px;">JPG, PNG · Max 5MB</div>
+                {% if player and player.photo_url %}
+                <label style="display:flex; align-items:center; gap:6px; margin-top:12px; cursor:pointer; font-size:0.75rem; color:var(--red); font-weight:600; justify-content:center;">
+                    <input type="checkbox" name="remove_photo" style="width:14px; height:14px; accent-color:var(--red);">
+                    Remove photo
+                </label>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Player details -->
+        <div class="col-lg-9">
+            <div class="card" style="margin-bottom:20px;">
+                <div class="card-header"><span style="color:var(--lime); margin-right:8px;">◉</span>Player Details</div>
+                <div style="padding:24px;">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Full Name *</label>
+                            <input type="text" name="name" class="form-control" value="{{ player.name if player else '' }}" required placeholder="e.g. Marcus Johnson">
+                        </div>
+                        <div class="col-md-3">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Position *</label>
+                            <select name="position" class="form-select" required>
+                                {% for pos in ['GK','DEF','MID','FWD'] %}
+                                <option value="{{ pos }}" {% if player and player.position == pos %}selected{% endif %}>{{ pos }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Shirt #</label>
+                            <input type="number" name="shirt_number" class="form-control" value="{{ player.shirt_number if player else '' }}" min="1" max="99">
+                        </div>
+                        <div class="col-md-6">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Team</label>
+                            <select name="team_id" class="form-select">
+                                <option value="">— Free Agent —</option>
+                                {% for team in teams %}
+                                <option value="{{ team.id }}" {% if player and player.team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">League *</label>
+                            <select name="league" class="form-select">
+                                <option value="boys" {% if league == 'boys' %}selected{% endif %}>Boys</option>
+                                <option value="girls" {% if league == 'girls' %}selected{% endif %}>Girls</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Age</label>
+                            <input type="number" name="age" class="form-control" value="{{ player.age if player else '' }}" min="5" max="25">
+                        </div>
+                        <div class="col-md-4">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Transfer Value (£)</label>
+                            <input type="number" name="price" class="form-control" value="{{ player.price if player else 0 }}" min="0" step="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if player %}
+            <div class="card" style="margin-bottom:20px;">
+                <div class="card-header"><span style="color:var(--lime); margin-right:8px;">◉</span>Season Stats</div>
+                <div style="padding:24px;">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Goals</label>
+                            <input type="number" name="goals" class="form-control" value="{{ player.goals }}" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Assists</label>
+                            <input type="number" name="assists" class="form-control" value="{{ player.assists }}" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Yellow Cards</label>
+                            <input type="number" name="yellow_cards" class="form-control" value="{{ player.yellow_cards }}" min="0">
+                        </div>
+                        <div class="col-md-3">
+                            <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">Red Cards</label>
+                            <input type="number" name="red_cards" class="form-control" value="{{ player.red_cards }}" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary" style="padding:12px 36px; font-size:0.92rem; letter-spacing:0.08em; display:inline-flex; align-items:center; gap:10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                {{ action }} Player
+            </button>
+        </div>
+    </div>
+</form>
+
+<script>
+function previewPhoto(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const preview = document.getElementById('photoPreview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            const ph = document.getElementById('photoPlaceholder');
+            if (ph) ph.style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Results – School Football League{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h1><i class="bi bi-flag me-3"></i>Results</h1>
+        <span class="badge" style="background:rgba({% if league=='girls' %}236,72,153{% else %}59,130,246{% endif %},0.2);color:{% if league=='girls' %}#f472b6{% else %}var(--lime){% endif %};font-size:0.85rem">
+            {{ league|capitalize }} League
+        </span>
+    </div>
+</div>
+
+<div class="container">
+{% if results %}
+    {% for item in results %}
+    {% set m = item.match %}
+    <div class="card mb-4">
+        <!-- SCORE ROW -->
+        <div class="card-body pb-0">
+            <div class="row align-items-center">
+                <!-- Home team -->
+                <div class="col-4 text-end">
+                    <div class="d-flex align-items-center justify-content-end gap-2">
+                        <div>
+                            <a href="{{ url_for('public.team_detail', team_id=m.home_team_id, league=league) }}"
+                               class="text-decoration-none fw-bold
+                               {% if m.home_goals > m.away_goals %}text-white{% else %}text-muted{% endif %}
+                               fs-5">{{ m.home_name }}</a>
+                        </div>
+                        <div class="team-badge" style="background:{{ m.home_color }};width:44px;height:44px;font-size:0.85rem;border-radius:10px">
+                            {{ m.home_short }}
+                        </div>
+                    </div>
+                </div>
+                <!-- Score -->
+                <div class="col-4 text-center">
+                    <div class="score-box mx-auto py-2 px-4" style="font-size:2rem;display:inline-block">
+                        {{ m.home_goals }} – {{ m.away_goals }}
+                    </div>
+                    <div class="mt-1">
+                        <small class="text-muted" style="font-size:0.72rem">
+                            <i class="bi bi-calendar me-1"></i>{{ m.match_date[:10] }}
+                            {% if m.venue %} · {{ m.venue }}{% endif %}
+                        </small>
+                    </div>
+                    <!-- Prize money indicator -->
+                    {% if m.prize_applied %}
+                    <div class="mt-1">
+                        {% if m.home_goals > m.away_goals %}
+                        <span class="prize-win">{{ m.home_name[:10] }} +€1,000</span>
+                        <span class="prize-loss ms-1">{{ m.away_name[:10] }} -€200</span>
+                        {% elif m.away_goals > m.home_goals %}
+                        <span class="prize-loss">{{ m.home_name[:10] }} -€200</span>
+                        <span class="prize-win ms-1">{{ m.away_name[:10] }} +€1,000</span>
+                        {% else %}
+                        <span style="color:rgba(255,255,255,0.6);font-size:0.72rem">Draw — no prize</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Away team -->
+                <div class="col-4 text-start">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="team-badge" style="background:{{ m.away_color }};width:44px;height:44px;font-size:0.85rem;border-radius:10px">
+                            {{ m.away_short }}
+                        </div>
+                        <div>
+                            <a href="{{ url_for('public.team_detail', team_id=m.away_team_id, league=league) }}"
+                               class="text-decoration-none fw-bold
+                               {% if m.away_goals > m.home_goals %}text-white{% else %}text-muted{% endif %}
+                               fs-5">{{ m.away_name }}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EVENTS ROW -->
+        {% if item.goals or item.yellow_cards or item.red_cards %}
+        <div class="card-footer" style="background:rgba(0,0,0,0.2);border-top:1px solid rgba(255,255,255,0.06)">
+            <div class="row">
+                <!-- Home side events -->
+                <div class="col-5 text-end">
+                    {% for ev in item.goals if ev.team_id == m.home_team_id %}
+                    <span class="event-pill event-goal">
+                        ⚽ {{ ev.player_name }}{% if ev.minute %} {{ ev.minute }}'{% endif %}
+                    </span>
+                    {% endfor %}
+                    {% for ev in item.yellow_cards if ev.team_id == m.home_team_id %}
+                    <span class="event-pill event-yellow">
+                        🟨 {{ ev.player_name }}{% if ev.minute %} {{ ev.minute }}'{% endif %}
+                    </span>
+                    {% endfor %}
+                    {% for ev in item.red_cards if ev.team_id == m.home_team_id %}
+                    <span class="event-pill event-red">
+                        🟥 {{ ev.player_name }}
+                    </span>
+                    {% endfor %}
+                </div>
+                <div class="col-2"></div>
+                <!-- Away side events -->
+                <div class="col-5">
+                    {% for ev in item.goals if ev.team_id == m.away_team_id %}
+                    <span class="event-pill event-goal">
+                        ⚽ {{ ev.player_name }}{% if ev.minute %} {{ ev.minute }}'{% endif %}
+                    </span>
+                    {% endfor %}
+                    {% for ev in item.yellow_cards if ev.team_id == m.away_team_id %}
+                    <span class="event-pill event-yellow">
+                        🟨 {{ ev.player_name }}{% if ev.minute %} {{ ev.minute }}'{% endif %}
+                    </span>
+                    {% endfor %}
+                    {% for ev in item.red_cards if ev.team_id == m.away_team_id %}
+                    <span class="event-pill event-red">
+                        🟥 {{ ev.player_name }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<div class="card">
+    <div class="card-body py-5 text-center text-muted">
+        <i class="bi bi-flag fs-1 d-block mb-3"></i>
+        <p>No results yet for the {{ league }} league.</p>
+    </div>
+</div>
+{% endif %}
+</div>
+{% endblock %}

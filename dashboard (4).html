@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Squad – {{ team.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .player-avatar {
+        width: 48px; height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(184,212,0,0.35);
+        background: rgba(255,255,255,0.05);
+    }
+    .player-avatar-placeholder {
+        width: 48px; height: 48px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.07);
+        border: 2px dashed rgba(255,255,255,0.2);
+        display: flex; align-items: center; justify-content: center;
+        color: rgba(255,255,255,0.3);
+        font-size: 1.3rem;
+    }
+    .photo-upload-popover {
+        display: none;
+        position: absolute;
+        z-index: 200;
+        background: #1a1f3a;
+        border: 1px solid rgba(184,212,0,0.25);
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        width: 230px;
+        top: 56px; left: 0;
+    }
+    .photo-upload-popover.show { display: block; }
+    .avatar-wrap { position: relative; cursor: pointer; }
+    .avatar-edit-btn {
+        position: absolute; bottom: -2px; right: -2px;
+        width: 18px; height: 18px;
+        background: var(--lime);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.55rem;
+        color: var(--navy);
+        font-weight: 900;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.15s;
+    }
+    .avatar-edit-btn:hover { transform: scale(1.2); }
+</style>
+
+<div class="page-header">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h1><i class="bi bi-people me-3"></i>My Squad – {{ team.name }}</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('captain.dashboard') }}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+            <a href="{{ url_for('captain.transfers') }}" class="btn btn-outline-secondary btn-sm">Transfers</a>
+            <a href="{{ url_for('captain.lineups') }}" class="btn btn-outline-secondary btn-sm">Lineups</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded" style="background:rgba(184,212,0,0.07);border:1px solid rgba(184,212,0,0.18)">
+        <i class="bi bi-wallet2 fs-4" style="color:var(--lime)"></i>
+        <div>
+            <small class="text-muted d-block">Transfer Budget</small>
+            <strong style="color:var(--gold);font-size:1.2rem">£{{ '{:,.0f}'.format(team.balance) }}</strong>
+        </div>
+        <div class="ms-auto text-muted small">{{ players|length }} players in squad</div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width:50px">#</th>
+                            <th style="width:60px">Photo</th>
+                            <th>Player</th>
+                            <th>Pos</th>
+                            <th class="text-center">Age</th>
+                            <th class="text-center">Goals</th>
+                            <th class="text-center">Ast</th>
+                            <th class="text-center">Sale Price</th>
+                            <th>Set Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in players %}
+                        <tr>
+                            <td class="text-muted align-middle">{{ p.shirt_number or '–' }}</td>
+                            <td class="align-middle">
+                                <div class="avatar-wrap" id="avatarWrap{{ p.id }}">
+                                    {% if p.photo_url %}
+                                        <img src="{{ p.photo_url }}" alt="{{ p.name }}" class="player-avatar">
+                                    {% else %}
+                                        <div class="player-avatar-placeholder">
+                                            <i class="bi bi-person"></i>
+                                        </div>
+                                    {% endif %}
+                                    <button class="avatar-edit-btn" type="button"
+                                            onclick="togglePhotoPopover({{ p.id }}, event)"
+                                            title="Upload photo">✎</button>
+                                    <div class="photo-upload-popover" id="photoPopover{{ p.id }}">
+                                        <div class="mb-2" style="font-size:0.78rem;font-weight:700;color:var(--lime);text-transform:uppercase;letter-spacing:0.08em;">
+                                            📸 {{ p.name }}
+                                        </div>
+                                        <form method="POST"
+                                              action="{{ url_for('captain.upload_player_photo', player_id=p.id) }}"
+                                              enctype="multipart/form-data">
+                                            <div class="mb-2">
+                                                <input type="file" name="photo" accept="image/*"
+                                                       class="form-control form-control-sm"
+                                                       style="font-size:0.75rem;">
+                                            </div>
+                                            <div class="d-flex gap-1">
+                                                <button type="submit" class="btn btn-sm btn-primary py-0 flex-fill"
+                                                        style="font-size:0.75rem;">Upload</button>
+                                                {% if p.photo_url %}
+                                                <button type="submit" name="remove_photo" value="1"
+                                                        class="btn btn-sm btn-outline-danger py-0"
+                                                        style="font-size:0.75rem;"
+                                                        onclick="return confirm('Remove photo?')">✕</button>
+                                                {% endif %}
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="fw-semibold text-white align-middle">{{ p.name }}</td>
+                            <td class="align-middle"><span class="badge-position pos-{{ p.position }}">{{ p.position }}</span></td>
+                            <td class="text-center text-muted align-middle">{{ p.age or '–' }}</td>
+                            <td class="text-center align-middle">{{ p.goals }}</td>
+                            <td class="text-center align-middle">{{ p.assists }}</td>
+                            <td class="text-center align-middle" style="color:{% if p.price > 0 %}var(--gold){% else %}rgba(255,255,255,0.4){% endif %}">
+                                {% if p.price > 0 %}£{{ '{:,.0f}'.format(p.price) }}{% else %}<span class="text-muted small">Not for sale</span>{% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <form method="POST" action="{{ url_for('captain.set_price', player_id=p.id) }}"
+                                      class="d-flex gap-1">
+                                    <input type="number" name="price" class="form-control form-control-sm"
+                                           style="width:90px" value="{{ p.price }}" min="0" step="500">
+                                    <button class="btn btn-sm btn-outline-warning py-0">Set</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                No players in your squad yet. Admin will assign players.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+        <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Set price to 0 to mark as not for sale.</small>
+        <small class="text-muted">·</small>
+        <small class="text-muted"><i class="bi bi-camera me-1"></i>Click the <strong style="color:var(--lime)">✎</strong> pencil icon on any player to upload their photo.</small>
+    </div>
+</div>
+
+<script>
+function togglePhotoPopover(playerId, e) {
+    e.stopPropagation();
+    document.querySelectorAll('.photo-upload-popover.show').forEach(function(el) {
+        if (el.id !== 'photoPopover' + playerId) el.classList.remove('show');
+    });
+    document.getElementById('photoPopover' + playerId).classList.toggle('show');
+}
+document.addEventListener('click', function() {
+    document.querySelectorAll('.photo-upload-popover.show').forEach(function(el) {
+        el.classList.remove('show');
+    });
+});
+</script>
+{% endblock %}

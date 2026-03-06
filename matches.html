@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Transfer Market – {{ team.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container d-flex justify-content-between align-items-center">
+        <h1><i class="bi bi-arrow-left-right me-3"></i>Transfer Market</h1>
+        <div class="d-flex gap-2 align-items-center">
+            <strong style="color:var(--gold)">Budget: £{{ '{:,.0f}'.format(team.balance) }}</strong>
+            <a href="{{ url_for('captain.dashboard') }}" class="btn btn-outline-secondary btn-sm ms-2">Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row g-4">
+        <!-- AVAILABLE PLAYERS -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-shop me-2" style="color:var(--lime)"></i>Available Players
+                </div>
+                <div class="card-body p-0">
+                    {% if available_players %}
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Player</th><th>Pos</th><th>Team</th>
+                                    <th class="text-center">Price</th><th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in available_players %}
+                                <tr>
+                                    <td class="fw-semibold text-white">{{ p.name }}</td>
+                                    <td><span class="badge-position pos-{{ p.position }}">{{ p.position }}</span></td>
+                                    <td class="text-muted small">{{ p.team_name or 'Free Agent' }}</td>
+                                    <td class="text-center fw-bold" style="color:var(--gold)">
+                                        £{{ '{:,.0f}'.format(p.price) }}
+                                    </td>
+                                    <td>
+                                        {% if team.balance >= p.price %}
+                                        <form method="POST" action="{{ url_for('captain.request_transfer', player_id=p.id) }}"
+                                              onsubmit="return confirm('Request transfer for {{ p.name }} at £{{ '{:,.0f}'.format(p.price) }}?')">
+                                            <button class="btn btn-sm btn-success py-0 px-2">
+                                                <i class="bi bi-cart-plus me-1"></i>Buy
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-danger small">Insufficient funds</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="bi bi-shop fs-1 d-block mb-3"></i>
+                        <p>No players available for transfer right now.</p>
+                        <small>Players become available when captains set their prices.</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- MY REQUESTS -->
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-clock-history me-2" style="color:var(--gold)"></i>My Transfer Requests
+                </div>
+                <div class="card-body p-0">
+                    {% for t in my_requests %}
+                    <div class="p-3 border-bottom" style="border-color:rgba(255,255,255,0.05)!important">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold text-white small">{{ t.player_name }}</div>
+                                <small class="text-muted">{{ t.from_team or 'Free Agent' }} → {{ t.to_team }}</small>
+                                <div>
+                                    <small style="color:var(--gold)">£{{ '{:,.0f}'.format(t.fee) }}</small>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge
+                                    {% if t.status == 'pending' %}transfer-pending
+                                    {% elif t.status == 'approved' %}transfer-approved
+                                    {% else %}transfer-rejected{% endif %}"
+                                    style="font-size:0.7rem">
+                                    {{ t.status }}
+                                </span>
+                                {% if t.status == 'rejected' and t.admin_note %}
+                                <div><small class="text-muted" style="font-size:0.65rem">{{ t.admin_note }}</small></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted small">No transfer requests made yet</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

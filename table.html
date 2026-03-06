@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}News – EIA Football League{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>News</h1>
+        <p style="font-size:0.78rem; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:0.12em; margin:6px 0 0;">{{ league|capitalize }} League · Latest Updates</p>
+    </div>
+</div>
+
+<!-- League switcher -->
+<div style="background:white; border-bottom:2px solid rgba(26,31,94,0.08);">
+    <div class="container">
+        <div style="display:flex;">
+            <a href="{{ url_for('public.news', league='boys') }}"
+               style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.12em; text-transform:uppercase; padding:14px 28px; text-decoration:none; border-bottom:3px solid {% if league=='boys' %}var(--lime){% else %}transparent{% endif %}; color:{% if league=='boys' %}var(--navy){% else %}var(--grey){% endif %}; margin-bottom:-2px;">
+                Boys League
+            </a>
+            <a href="{{ url_for('public.news', league='girls') }}"
+               style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.12em; text-transform:uppercase; padding:14px 28px; text-decoration:none; border-bottom:3px solid {% if league=='girls' %}var(--lime){% else %}transparent{% endif %}; color:{% if league=='girls' %}var(--navy){% else %}var(--grey){% endif %}; margin-bottom:-2px;">
+                Girls League
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-top:36px; padding-bottom:60px;">
+    <div class="row g-4">
+        {% for article in articles %}
+        <div class="col-md-4 col-sm-6">
+            <a href="{{ url_for('public.news_detail', news_id=article.id) }}" style="text-decoration:none; display:block; height:100%;">
+                <div class="card h-100" style="transition:transform 0.2s; overflow:hidden;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+                    <!-- Featured image -->
+                    {% if article.image_url %}
+                    <div style="height:190px; overflow:hidden; flex-shrink:0;">
+                        <img src="{{ article.image_url }}" alt="{{ article.title }}"
+                             style="width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.4s;"
+                             onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform=''">
+                    </div>
+                    {% else %}
+                    <div style="height:80px; background:linear-gradient(135deg, var(--navy) 0%, #252b80 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(184,212,0,0.4)" stroke-width="1.5"><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"/><rect x="9" y="10" width="6" height="12"/></svg>
+                    </div>
+                    {% endif %}
+
+                    <div style="padding:20px 22px; display:flex; flex-direction:column; flex:1;">
+                        <!-- Category badge -->
+                        <div style="margin-bottom:10px;">
+                            <span style="font-family:'Barlow Condensed',sans-serif; font-size:0.68rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; padding:3px 8px; border-radius:2px;
+                                {% if article.category=='transfer' %}background:rgba(245,166,35,0.15); color:#7a5000;
+                                {% elif article.category=='match' %}background:rgba(184,212,0,0.15); color:#4a6000;
+                                {% elif article.category=='announcement' %}background:rgba(224,43,43,0.12); color:#8b0000;
+                                {% else %}background:rgba(26,31,94,0.08); color:var(--navy);{% endif %}">
+                                {{ article.category }}
+                            </span>
+                        </div>
+
+                        <h3 style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.15rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--navy); line-height:1.2; margin:0 0 10px; flex:1;">{{ article.title }}</h3>
+
+                        <p style="font-size:0.82rem; color:var(--grey); margin:0 0 14px; line-height:1.6;">{{ article.content[:110] }}{% if article.content|length > 110 %}…{% endif %}</p>
+
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding-top:12px; border-top:1px solid rgba(26,31,94,0.07);">
+                            <span style="font-size:0.72rem; color:var(--grey);">{{ article.author }} · {{ article.created_at|fmtdt|truncate(10,True,"") }}</span>
+                            <span style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--lime);">Read →</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card">
+                <div style="padding:60px; text-align:center; color:var(--grey);">
+                    <div style="font-family:'Barlow Condensed',sans-serif; font-size:1.2rem; font-weight:700; text-transform:uppercase; margin-bottom:8px;">No articles yet</div>
+                    <p style="font-size:0.85rem;">No news published for the {{ league }} league yet.</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

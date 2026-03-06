@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} – EIA Football League{% endblock %}
+
+{% block content %}
+{% if article.image_url %}
+<div style="width:100%; max-height:420px; overflow:hidden; position:relative;">
+    <img src="{{ article.image_url }}" alt="{{ article.title }}" style="width:100%; height:420px; object-fit:cover; display:block;">
+    <div style="position:absolute; bottom:0; left:0; right:0; height:200px; background:linear-gradient(to top, rgba(26,31,94,0.95), transparent);"></div>
+</div>
+{% else %}
+<div class="page-header">
+    <div class="container"><h1>{{ article.title }}</h1></div>
+</div>
+{% endif %}
+
+<div class="container" style="padding-top:{% if article.image_url %}0{% else %}32px{% endif %}; padding-bottom:60px; max-width:860px;">
+    {% if article.image_url %}
+    <div style="margin-top:-60px; position:relative; z-index:10; margin-bottom:32px;">
+    {% endif %}
+
+    <div class="card">
+        <div style="padding:36px 40px;">
+            <!-- Category + meta -->
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+                <span style="font-family:'Barlow Condensed',sans-serif; font-size:0.72rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; padding:4px 10px; border-radius:2px;
+                    {% if article.category=='transfer' %}background:rgba(245,166,35,0.15); color:#7a5000;
+                    {% elif article.category=='match' %}background:rgba(184,212,0,0.15); color:#4a6000;
+                    {% elif article.category=='announcement' %}background:rgba(224,43,43,0.12); color:#8b0000;
+                    {% else %}background:rgba(26,31,94,0.08); color:var(--navy);{% endif %}">
+                    {{ article.category }}
+                </span>
+                <span style="font-size:0.78rem; color:var(--grey);">By {{ article.author }}</span>
+                <span style="font-size:0.78rem; color:var(--grey);">{{ article.created_at|fmtdt }}</span>
+            </div>
+
+            <h1 style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:2.2rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--navy); line-height:1.1; margin-bottom:24px;">{{ article.title }}</h1>
+
+            <div style="line-height:1.85; color:#3a4060; font-size:1rem; white-space:pre-wrap;">{{ article.content }}</div>
+        </div>
+    </div>
+
+    {% if article.image_url %}</div>{% endif %}
+
+    <div style="margin-top:24px;">
+        <a href="{{ url_for('public.news', league=league) }}"
+           style="display:inline-flex; align-items:center; gap:8px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.82rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--navy); text-decoration:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            Back to News
+        </a>
+    </div>
+</div>
+{% endblock %}

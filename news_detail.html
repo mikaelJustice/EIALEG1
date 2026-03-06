@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }} – EIA Football League{% endblock %}
+
+{% block content %}
+<div class="page-header" style="border-top:5px solid {{ team.badge_color }};">
+    <div class="container">
+        <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+            <div class="team-badge" style="background:{{ team.badge_color }}; width:72px; height:72px; font-size:1.1rem; border-radius:14px; flex-shrink:0;">{{ team.short_name[:3] }}</div>
+            <div>
+                <h1 style="margin:0;">{{ team.name }}</h1>
+                <p style="font-size:0.78rem; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:0.12em; margin:4px 0 0;">
+                    {{ league|capitalize }} League
+                    {% if team.home_ground %} · {{ team.home_ground }}{% endif %}
+                    {% if team.founded_year %} · Est. {{ team.founded_year }}{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-top:32px; padding-bottom:60px;">
+    <div class="row g-4">
+
+        <!-- LEFT: Squad + Transfers -->
+        <div class="col-lg-8">
+
+            <!-- Team stats bar -->
+            <div class="card" style="margin-bottom:24px; border-top:3px solid {{ team.badge_color }};">
+                <div style="display:grid; grid-template-columns:repeat(4, 1fr); divide-x:1px solid rgba(26,31,94,0.07);">
+                    <div style="padding:20px; text-align:center; border-right:1px solid rgba(26,31,94,0.07);">
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.8rem; color:var(--navy);">{{ players|length }}</div>
+                        <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--grey);">Players</div>
+                    </div>
+                    <div style="padding:20px; text-align:center; border-right:1px solid rgba(26,31,94,0.07);">
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.3rem; color:var(--navy);">£{{ '{:,.0f}'.format(team.balance) }}</div>
+                        <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--grey);">Budget</div>
+                    </div>
+                    <div style="padding:20px; text-align:center; border-right:1px solid rgba(26,31,94,0.07);">
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.3rem; color:var(--navy);">{{ captain or '–' }}</div>
+                        <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--grey);">Captain</div>
+                    </div>
+                    <div style="padding:20px; text-align:center;">
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.8rem; color:var(--navy);">{{ transfers|length }}</div>
+                        <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--grey);">Transfers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SQUAD TABLE -->
+            <div class="section-label">Squad</div>
+            <div class="card" style="margin-bottom:28px;">
+                <div style="overflow-x:auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">#</th>
+                                <th>Player</th>
+                                <th class="text-center">Pos</th>
+                                <th class="text-center">Goals</th>
+                                <th class="text-center">Assists</th>
+                                <th class="text-center">YC</th>
+                                <th class="text-center">RC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in players %}
+                            <tr>
+                                <td style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:0.95rem; color:var(--grey);">{{ p.shirt_number or '–' }}</td>
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <div style="width:30px; height:30px; border-radius:50%; background:{{ team.badge_color }}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                            <span style="font-family:'Barlow Condensed',sans-serif; font-size:0.7rem; font-weight:900; color:white;">{{ p.shirt_number or '?' }}</span>
+                                        </div>
+                                        <div>
+                                            <div style="font-weight:700; font-size:0.88rem; color:var(--navy);">{{ p.name }}</div>
+                                            {% if p.age %}<div style="font-size:0.7rem; color:var(--grey);">Age {{ p.age }}</div>{% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center"><span class="badge-pos {{ p.position }}" style="font-size:0.65rem;">{{ p.position }}</span></td>
+                                <td class="text-center" style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:1rem; color:var(--navy);">{{ p.goals or 0 }}</td>
+                                <td class="text-center" style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:1rem; color:var(--grey);">{{ p.assists or 0 }}</td>
+                                <td class="text-center">
+                                    {% if p.yellow_cards %}
+                                    <span style="display:inline-block; width:12px; height:16px; background:#f5a623; border-radius:2px; vertical-align:middle;"></span>
+                                    <span style="font-size:0.8rem; font-weight:700; color:#7a5000; margin-left:3px;">{{ p.yellow_cards }}</span>
+                                    {% else %}<span style="color:var(--grey); font-size:0.8rem;">0</span>{% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if p.red_cards %}
+                                    <span style="display:inline-block; width:12px; height:16px; background:var(--red); border-radius:2px; vertical-align:middle;"></span>
+                                    <span style="font-size:0.8rem; font-weight:700; color:#8b0000; margin-left:3px;">{{ p.red_cards }}</span>
+                                    {% else %}<span style="color:var(--grey); font-size:0.8rem;">0</span>{% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" style="text-align:center; padding:32px; color:var(--grey); font-size:0.85rem;">No players registered</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TRANSFER HISTORY -->
+            {% if transfers %}
+            <div class="section-label">Transfer History</div>
+            <div class="card" style="margin-bottom:28px;">
+                <div style="overflow-x:auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>From</th>
+                                <th></th>
+                                <th>To</th>
+                                <th class="text-right">Fee</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transfers %}
+                            <tr>
+                                <td>
+                                    <div style="font-weight:700; font-size:0.88rem; color:var(--navy);">{{ t.player_name }}</div>
+                                    <span class="badge-pos {{ t.player_pos }}" style="font-size:0.6rem;">{{ t.player_pos }}</span>
+                                </td>
+                                <td style="font-size:0.82rem; color:var(--grey);">{{ t.from_team or 'Free Agent' }}</td>
+                                <td style="text-align:center;">
+                                    {% if t.to_team == team.name %}
+                                    <span style="font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; background:rgba(184,212,0,0.15); color:#4a6000; padding:3px 8px; border-radius:2px;">IN</span>
+                                    {% else %}
+                                    <span style="font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; background:rgba(224,43,43,0.1); color:#8b0000; padding:3px 8px; border-radius:2px;">OUT</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size:0.82rem; color:var(--grey);">{{ t.to_team }}</td>
+                                <td style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.95rem; color:var(--navy); text-align:right;">£{{ '{:,.0f}'.format(t.fee) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- RIGHT: Recent Results + Lineup -->
+        <div class="col-lg-4">
+
+            <!-- LATEST LINEUP -->
+            {% if latest_lineup %}
+            <div class="section-label">Next Match Lineup</div>
+            <div class="card" style="margin-bottom:24px; border-top:3px solid {{ team.badge_color }};">
+                <div class="card-header" style="display:flex; align-items:center; justify-content:space-between;">
+                    <span>Starting XI</span>
+                    <span style="font-size:0.72rem; font-weight:700; letter-spacing:0.08em; color:rgba(255,255,255,0.5);">{{ lineup_formation }}</span>
+                </div>
+
+                <!-- Visual mini pitch -->
+                <div style="position:relative; margin:16px; border-radius:6px; overflow:hidden; background:linear-gradient(180deg, #2d7a2d 0%, #348c34 25%, #2d7a2d 50%, #348c34 75%, #2d7a2d 100%); padding-bottom:130%;">
+                    <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;" viewBox="0 0 200 260" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="6" y="6" width="188" height="248" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+                        <line x1="6" y1="130" x2="194" y2="130" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                        <circle cx="100" cy="130" r="26" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                        <rect x="55" y="6" width="90" height="36" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                        <rect x="55" y="218" width="90" height="36" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+                    </svg>
+                    {% set rows = namespace(data={}) %}
+                    {% for p in latest_lineup %}
+                        {% set rk = p.pitch_row|string %}
+                        {% if rk not in rows.data %}{% set _ = rows.data.update({rk: []}) %}{% endif %}
+                        {% set _ = rows.data[rk].append(p) %}
+                    {% endfor %}
+                    {% set sorted_rows = rows.data.keys()|list|sort %}
+                    {% set row_count = sorted_rows|length %}
+                    {% for rk in sorted_rows %}
+                    {% set row_players = rows.data[rk] %}
+                    {% set ri = loop.index0 %}
+                    {% set y_pct = 8 + (ri / row_count) * 82 %}
+                    {% for p in row_players %}
+                    {% set x_pct = (loop.index0 + 1) / (row_players|length + 1) * 100 %}
+                    <div style="position:absolute; left:{{ x_pct }}%; top:{{ y_pct }}%; transform:translate(-50%,-50%); text-align:center; z-index:10;">
+                        <div style="width:28px; height:28px; border-radius:50%; background:{{ team.badge_color }}; border:2px solid white; display:flex; align-items:center; justify-content:center; margin:0 auto;">
+                            <span style="font-family:'Barlow Condensed',sans-serif; font-size:0.62rem; font-weight:900; color:white;">{{ p.shirt_number or loop.index }}</span>
+                        </div>
+                        <div style="font-size:0.5rem; color:white; font-weight:700; text-shadow:0 1px 2px rgba(0,0,0,0.8); white-space:nowrap; overflow:hidden; max-width:38px; margin-top:2px;">{{ p.player_name.split(' ')|last }}</div>
+                    </div>
+                    {% endfor %}
+                    {% endfor %}
+                </div>
+
+                <!-- Player list below pitch -->
+                <div style="padding:12px 16px 16px;">
+                    {% for p in latest_lineup %}
+                    <div style="display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid rgba(26,31,94,0.05);">
+                        <div style="width:22px; height:22px; border-radius:50%; background:{{ team.badge_color }}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                            <span style="font-size:0.6rem; font-weight:900; color:white;">{{ p.shirt_number or loop.index }}</span>
+                        </div>
+                        <span style="font-size:0.82rem; font-weight:600; flex:1; color:var(--navy);">{{ p.player_name }}</span>
+                        <span class="badge-pos {{ p.player_pos }}" style="font-size:0.58rem; padding:1px 5px;">{{ p.player_pos }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- RECENT RESULTS -->
+            <div class="section-label">Recent Results</div>
+            <div class="card">
+                <div class="card-header">Recent Matches</div>
+                {% for r in recent %}
+                {% set m = r.match %}
+                <div style="padding:16px 20px; border-bottom:1px solid rgba(26,31,94,0.06);">
+                    <div style="display:flex; align-items:center; gap:10px; justify-content:center;">
+                        <span style="font-size:0.82rem; font-weight:600; flex:1; text-align:right; color:{% if m.home_team_id == team.id %}var(--navy){% else %}var(--grey){% endif %};">{{ m.home_name }}</span>
+                        <span class="score-box" style="font-size:1rem; padding:4px 12px; flex-shrink:0;">{{ m.home_goals }}–{{ m.away_goals }}</span>
+                        <span style="font-size:0.82rem; font-weight:600; flex:1; color:{% if m.away_team_id == team.id %}var(--navy){% else %}var(--grey){% endif %};">{{ m.away_name }}</span>
+                    </div>
+                    <div style="text-align:center; margin-top:6px; font-size:0.7rem; color:var(--grey);">{{ m.match_date[:10] }}</div>
+                    {% if r.events %}
+                    <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:4px; justify-content:center;">
+                        {% for e in r.events %}
+                        {% if e.event_type == 'goal' %}
+                        <span style="font-size:0.65rem; background:rgba(184,212,0,0.15); color:#4a6000; padding:2px 6px; border-radius:2px; font-weight:700;">⚽ {{ e.player_name }}{% if e.minute %} {{ e.minute }}'{% endif %}</span>
+                        {% elif e.event_type == 'yellow_card' %}
+                        <span style="font-size:0.65rem; background:rgba(245,166,35,0.15); color:#7a5000; padding:2px 6px; border-radius:2px; font-weight:700;">🟨 {{ e.player_name }}</span>
+                        {% elif e.event_type == 'red_card' %}
+                        <span style="font-size:0.65rem; background:rgba(224,43,43,0.1); color:#8b0000; padding:2px 6px; border-radius:2px; font-weight:700;">🟥 {{ e.player_name }}</span>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div style="padding:32px; text-align:center; color:var(--grey); font-size:0.85rem;">No results yet</div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

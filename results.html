@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Teams – EIA Football League{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Teams &amp; Clubs</h1>
+        <p style="font-size:0.82rem; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:0.12em; margin:6px 0 0;">
+            {{ league|capitalize }} League · {{ teams|length }} Club{{ 's' if teams|length != 1 else '' }}
+        </p>
+    </div>
+</div>
+
+<!-- League switcher -->
+<div style="background:white; border-bottom:2px solid rgba(26,31,94,0.08); padding:0;">
+    <div class="container">
+        <div style="display:flex; gap:0;">
+            <a href="{{ url_for('public.teams', league='boys') }}"
+               style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.12em; text-transform:uppercase; padding:14px 28px; text-decoration:none; border-bottom:3px solid {% if league=='boys' %}var(--lime){% else %}transparent{% endif %}; color:{% if league=='boys' %}var(--navy){% else %}var(--grey){% endif %}; margin-bottom:-2px;">
+                Boys League
+            </a>
+            <a href="{{ url_for('public.teams', league='girls') }}"
+               style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.12em; text-transform:uppercase; padding:14px 28px; text-decoration:none; border-bottom:3px solid {% if league=='girls' %}var(--lime){% else %}transparent{% endif %}; color:{% if league=='girls' %}var(--navy){% else %}var(--grey){% endif %}; margin-bottom:-2px;">
+                Girls League
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-top:40px; padding-bottom:60px;">
+    <div class="row g-4">
+        {% for entry in teams %}
+        {% set team = entry.team %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100" style="border-top:4px solid {{ team.badge_color }};">
+                <!-- Team Header -->
+                <div style="padding:28px 28px 20px; display:flex; align-items:center; gap:18px;">
+                    <div class="team-badge" style="background:{{ team.badge_color }}; width:64px; height:64px; font-size:1rem; border-radius:12px; flex-shrink:0;">{{ team.short_name[:3] }}</div>
+                    <div>
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.35rem; letter-spacing:0.05em; text-transform:uppercase; color:var(--navy); line-height:1.1;">{{ team.name }}</div>
+                        {% if team.home_ground %}
+                        <div style="font-size:0.75rem; color:var(--grey); margin-top:3px; display:flex; align-items:center; gap:4px;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {{ team.home_ground }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Stats Row -->
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; border-top:1px solid rgba(26,31,94,0.07); border-bottom:1px solid rgba(26,31,94,0.07);">
+                    <div style="padding:14px 12px; text-align:center; border-right:1px solid rgba(26,31,94,0.07);">
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.5rem; color:var(--navy);">{{ team.player_count }}</div>
+                        <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--grey);">Players</div>
+                    </div>
+                    <div style="padding:14px 12px; text-align:center; border-right:1px solid rgba(26,31,94,0.07);">
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.15rem; color:var(--navy);">£{{ '{:,.0f}'.format(team.balance) }}</div>
+                        <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--grey);">Budget</div>
+                    </div>
+                    <div style="padding:14px 12px; text-align:center;">
+                        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.15rem; color:var(--navy);">{{ team.founded_year or '–' }}</div>
+                        <div style="font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--grey);">Founded</div>
+                    </div>
+                </div>
+
+                <!-- Captain -->
+                <div style="padding:14px 20px; border-bottom:1px solid rgba(26,31,94,0.07); display:flex; align-items:center; gap:10px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--grey)" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <div>
+                        <span style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--grey);">Captain: </span>
+                        <span style="font-size:0.85rem; font-weight:700; color:var(--navy);">{{ entry.captain or 'Not assigned' }}</span>
+                    </div>
+                </div>
+
+                <!-- Transfer History -->
+                {% if entry.transfers %}
+                <div style="padding:14px 20px 10px;">
+                    <div style="font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:var(--grey); margin-bottom:8px;">Recent Transfers</div>
+                    {% for t in entry.transfers %}
+                    <div style="display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid rgba(26,31,94,0.05);">
+                        <span class="badge-pos {{ t.player_pos }}" style="font-size:0.6rem; padding:2px 5px;">{{ t.player_pos }}</span>
+                        <span style="font-size:0.82rem; font-weight:600; flex:1; color:var(--navy);">{{ t.player_name }}</span>
+                        {% if t.to_team == team.name %}
+                        <span style="font-size:0.68rem; font-weight:700; color:#4a6000; background:rgba(184,212,0,0.12); padding:2px 7px; border-radius:2px;">IN</span>
+                        {% else %}
+                        <span style="font-size:0.68rem; font-weight:700; color:#8b0000; background:rgba(224,43,43,0.08); padding:2px 7px; border-radius:2px;">OUT</span>
+                        {% endif %}
+                        <span style="font-size:0.75rem; color:var(--grey);">£{{ '{:,.0f}'.format(t.fee) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div style="padding:16px 20px; margin-top:auto;">
+                    <a href="{{ url_for('public.team_detail', team_id=team.id) }}"
+                       class="btn btn-primary" style="width:100%; text-align:center; display:block;">
+                        View Full Squad
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card">
+                <div style="padding:60px; text-align:center; color:var(--grey);">
+                    <div style="font-family:'Barlow Condensed',sans-serif; font-size:1.2rem; font-weight:700; text-transform:uppercase; margin-bottom:8px;">No teams yet</div>
+                    <p style="font-size:0.85rem;">No teams registered for the {{ league }} league.</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

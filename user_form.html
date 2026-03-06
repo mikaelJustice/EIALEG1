@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Captain Portal – {{ team.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="team-badge" style="background:{{ team.badge_color }};width:55px;height:55px;font-size:1rem;border-radius:10px">
+                    {{ team.short_name[:3] }}
+                </div>
+                <div>
+                    <h1 style="font-family:'Barlow Condensed',sans-serif;color:var(--lime);letter-spacing:2px;font-size:2rem">
+                        {{ team.name }}
+                    </h1>
+                    <small class="text-muted">Captain Portal · {{ session.username }}</small>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="fs-4 fw-bold" style="color:var(--gold)">£{{ '{:,.0f}'.format(team.balance) }}</div>
+                <small class="text-muted">Transfer Budget</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- CAPTAIN NAV -->
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+        <a href="{{ url_for('captain.dashboard') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+        </a>
+        <a href="{{ url_for('captain.squad') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-people me-1"></i>Squad
+        </a>
+        <a href="{{ url_for('captain.transfers') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left-right me-1"></i>Transfers
+        </a>
+        <a href="{{ url_for('captain.lineups') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-clipboard-check me-1"></i>Lineups
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- SQUAD SUMMARY -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-people me-2" style="color:var(--lime)"></i>Squad ({{ players|length }})</div>
+                <div class="card-body p-0">
+                    {% for pos in ['GK','DEF','MID','FWD'] %}
+                    {% set pos_players = players | selectattr('position', 'eq', pos) | list %}
+                    {% if pos_players %}
+                    <div class="px-3 py-2" style="border-bottom:1px solid rgba(255,255,255,0.05)">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge-position pos-{{ pos }}">{{ pos }}</span>
+                            <small class="text-muted">{{ pos_players|length }} players</small>
+                        </div>
+                        {% for p in pos_players %}
+                        <div class="d-flex justify-content-between py-1">
+                            <small class="text-white">
+                                {% if p.shirt_number %}<span class="text-muted me-1">#{{ p.shirt_number }}</span>{% endif %}
+                                {{ p.name }}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% if not players %}
+                    <div class="p-4 text-center text-muted small">No players in squad yet</div>
+                    {% endif %}
+                </div>
+                <div class="card-footer" style="background:transparent;border-color:rgba(255,255,255,0.08)">
+                    <a href="{{ url_for('captain.squad') }}" class="btn btn-sm btn-outline-secondary w-100">Manage Squad</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPCOMING FIXTURES -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header"><i class="bi bi-calendar3 me-2" style="color:var(--lime)"></i>Upcoming Fixtures</div>
+                <div class="card-body p-0">
+                    {% for match in upcoming %}
+                    <div class="p-3 border-bottom" style="border-color:rgba(255,255,255,0.05)!important">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <small class="fw-semibold {% if match.home_team_id == team.id %}text-white{% else %}text-muted{% endif %}">
+                                {{ match.home_name }}
+                            </small>
+                            <small class="text-muted mx-2">vs</small>
+                            <small class="fw-semibold {% if match.away_team_id == team.id %}text-white{% else %}text-muted{% endif %}">
+                                {{ match.away_name }}
+                            </small>
+                        </div>
+                        <div class="text-center mt-1">
+                            <small style="color:var(--gold);font-size:0.7rem">{{ match.match_date[:16] }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted small">No upcoming fixtures</div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer" style="background:transparent;border-color:rgba(255,255,255,0.08)">
+                    <a href="{{ url_for('captain.lineups') }}" class="btn btn-sm btn-outline-secondary w-100">Submit Lineups</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANSFERS & TRANSACTIONS -->
+        <div class="col-md-4">
+            <!-- Pending Transfers -->
+            <div class="card mb-3">
+                <div class="card-header"><i class="bi bi-arrow-left-right me-2" style="color:var(--gold)"></i>Pending Transfers</div>
+                <div class="card-body p-0">
+                    {% for t in pending_transfers %}
+                    <div class="p-3 border-bottom" style="border-color:rgba(255,255,255,0.05)!important">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-white">{{ t.player_name }}</small>
+                            <span class="badge" style="background:rgba(243,156,18,0.2);color:var(--gold);font-size:0.7rem">
+                                £{{ '{:,.0f}'.format(t.fee) }}
+                            </span>
+                        </div>
+                        <small class="text-muted" style="font-size:0.7rem">Awaiting admin approval</small>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">No pending requests</div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer" style="background:transparent;border-color:rgba(255,255,255,0.08)">
+                    <a href="{{ url_for('captain.transfers') }}" class="btn btn-sm btn-outline-secondary w-100">Transfer Market</a>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="card">
+                <div class="card-header"><i class="bi bi-cash-stack me-2" style="color:var(--lime)"></i>Recent Transactions</div>
+                <div class="card-body p-0">
+                    {% for tx in transactions[:5] %}
+                    <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center"
+                         style="border-color:rgba(255,255,255,0.05)!important">
+                        <small class="text-muted">{{ tx.description }}</small>
+                        <small class="fw-bold {% if tx.amount > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if tx.amount > 0 %}+{% endif %}£{{ '{:,.0f}'.format(tx.amount|abs) }}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-center text-muted small">No transactions yet</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Teams – Admin{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 style="font-family:'Barlow Condensed',sans-serif;color:var(--lime);letter-spacing:2px">
+        <i class="bi bi-shield-fill me-2"></i>Teams
+    </h2>
+    <a href="{{ url_for('admin.add_team', league=league) }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Add Team
+    </a>
+</div>
+
+<ul class="nav nav-tabs mb-4" style="border-color:rgba(0,212,170,0.2)">
+    <li class="nav-item">
+        <a class="nav-link {% if league=='boys' %}active{% endif %}"
+           href="{{ url_for('admin.teams', league='boys') }}"
+           style="{% if league=='boys' %}color:var(--lime);border-color:var(--lime);background:rgba(59,130,246,0.1){% else %}color:rgba(255,255,255,0.6){% endif %}">
+            <i class="bi bi-person-fill me-1"></i>Boys League
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {% if league=='girls' %}active{% endif %}"
+           href="{{ url_for('admin.teams', league='girls') }}"
+           style="{% if league=='girls' %}color:#f472b6;border-color:#f472b6;background:rgba(236,72,153,0.1){% else %}color:rgba(255,255,255,0.6){% endif %}">
+            <i class="bi bi-person-fill me-1"></i>Girls League
+        </a>
+    </li>
+</ul>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Team</th><th>Short</th>
+                        <th class="text-center">Players</th>
+                        <th class="text-center">Balance</th>
+                        <th>Captain</th>
+                        <th>Home Ground</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="team-badge" style="background:{{ team.badge_color }}">{{ team.short_name[:2] }}</div>
+                                <span class="fw-semibold text-white">{{ team.name }}</span>
+                            </div>
+                        </td>
+                        <td class="text-muted">{{ team.short_name }}</td>
+                        <td class="text-center">{{ team.player_count }}</td>
+                        <td class="text-center fw-bold" style="color:var(--gold)">€{{ '{:,.0f}'.format(team.balance) }}</td>
+                        <td class="text-muted">{{ team.captain_name or '–' }}</td>
+                        <td class="text-muted small">{{ team.home_ground or '–' }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning py-0 px-2 me-1"
+                                    data-bs-toggle="modal" data-bs-target="#moneyModal{{ team.id }}">€+</button>
+                            <a href="{{ url_for('admin.edit_team', team_id=team.id) }}"
+                               class="btn btn-sm btn-outline-secondary py-0 px-2 me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('admin.delete_team', team_id=team.id) }}"
+                                  class="d-inline" onsubmit="return confirm('Delete {{ team.name }}?')">
+                                <button class="btn btn-sm btn-outline-danger py-0 px-2"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <!-- Add Money Modal -->
+                    <div class="modal fade" id="moneyModal{{ team.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content" style="background:#1a1a2e;border:1px solid rgba(0,212,170,0.2)">
+                                <div class="modal-header" style="border-color:rgba(0,212,170,0.2)">
+                                    <h5 class="modal-title" style="color:var(--lime)"><i class="bi bi-cash me-2"></i>Add Money – {{ team.name }}</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('admin.add_money', team_id=team.id) }}">
+                                    <div class="modal-body">
+                                        <p class="text-muted small">Balance: <strong style="color:var(--gold)">€{{ '{:,.0f}'.format(team.balance) }}</strong></p>
+                                        <div class="mb-3">
+                                            <label class="form-label">Amount (€)</label>
+                                            <input type="number" name="amount" class="form-control" placeholder="e.g. 5000" min="1" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Description</label>
+                                            <input type="text" name="description" class="form-control" value="Admin top-up">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer" style="border-color:rgba(0,212,170,0.2)">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-warning"><i class="bi bi-cash me-1"></i>Add Money</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            No {{ league }} league teams yet.
+                            <a href="{{ url_for('admin.add_team', league=league) }}">Add the first team</a>.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

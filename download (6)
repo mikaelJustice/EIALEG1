@@ -1,0 +1,294 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Enter Result — Admin{% endblock %}
+
+{% block admin_content %}
+
+<!-- PAGE TITLE -->
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;">
+    <div>
+        <h2 style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:2rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--navy); margin:0; line-height:1;">
+            Enter <span style="color:var(--lime);">Match Result</span>
+        </h2>
+        <p style="font-size:0.78rem; color:var(--grey); text-transform:uppercase; letter-spacing:0.1em; margin:4px 0 0;">Record score, scorers and cards</p>
+    </div>
+    <a href="{{ url_for('admin.matches', league=league) }}"
+       style="display:inline-flex; align-items:center; gap:8px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.82rem; letter-spacing:0.1em; text-transform:uppercase; padding:9px 18px; border:1.5px solid rgba(26,31,94,0.2); border-radius:3px; color:var(--navy); text-decoration:none; background:white; transition:all 0.2s;"
+       onmouseover="this.style.background='var(--navy)';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='var(--navy)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Fixtures
+    </a>
+</div>
+
+<!-- MATCH HEADER CARD -->
+<div class="card" style="margin-bottom:24px; border-top:4px solid var(--lime);">
+    <div style="padding:28px 32px;">
+        <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; text-align:center;">
+
+            <!-- Home Team -->
+            <div>
+                <div class="team-badge" style="background:{{ match.home_color }}; width:56px; height:56px; font-size:0.95rem; margin:0 auto 10px;">{{ match.home_name[:3].upper() }}</div>
+                <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.2rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--navy);">{{ match.home_name }}</div>
+                <div style="font-size:0.72rem; color:var(--grey); text-transform:uppercase; letter-spacing:0.1em; margin-top:3px;">Home</div>
+            </div>
+
+            <!-- VS / Score -->
+            <div style="min-width:120px;">
+                <div style="font-size:0.72rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--grey); margin-bottom:8px;">{{ match.match_date[:10] }}</div>
+                {% if match.status == 'played' %}
+                <div class="score-box" style="font-size:1.8rem; padding:8px 20px; display:inline-block;">{{ match.home_goals }} – {{ match.away_goals }}</div>
+                <div style="margin-top:6px;"><span style="font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; background:rgba(184,212,0,0.15); color:#4a6000; padding:3px 10px; border-radius:2px;">Played</span></div>
+                {% else %}
+                <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:2rem; color:var(--grey); letter-spacing:0.1em;">VS</div>
+                {% endif %}
+                {% if match.venue %}<div style="font-size:0.72rem; color:var(--grey); margin-top:6px;">{{ match.venue }}</div>{% endif %}
+            </div>
+
+            <!-- Away Team -->
+            <div>
+                <div class="team-badge" style="background:{{ match.away_color }}; width:56px; height:56px; font-size:0.95rem; margin:0 auto 10px;">{{ match.away_name[:3].upper() }}</div>
+                <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.2rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--navy);">{{ match.away_name }}</div>
+                <div style="font-size:0.72rem; color:var(--grey); text-transform:uppercase; letter-spacing:0.1em; margin-top:3px;">Away</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PRIZE MONEY NOTICE -->
+<div style="background:rgba(245,166,35,0.08); border:1.5px solid rgba(245,166,35,0.3); border-radius:4px; padding:14px 20px; margin-bottom:24px; display:flex; align-items:center; gap:12px;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b07800" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span style="font-size:0.85rem; font-weight:600; color:#7a5000;">
+        <strong>Prize Money:</strong> Winner <strong>+€1,000</strong> &nbsp;·&nbsp; Loser <strong>-€200</strong> &nbsp;·&nbsp; Draw: no change
+    </span>
+</div>
+
+<form method="POST" id="resultForm">
+
+    <!-- SCORE -->
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+            <span style="color:var(--lime); margin-right:8px;">&#9679;</span>Final Score
+        </div>
+        <div style="padding:28px 32px;">
+            <div style="display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:24px; max-width:480px; margin:0 auto;">
+                <div style="text-align:center;">
+                    <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">{{ match.home_name }}</label>
+                    <input type="number" name="home_goals" id="home_goals"
+                           class="form-control"
+                           value="{{ match.home_goals if match.home_goals is not none else 0 }}"
+                           min="0" max="30" required
+                           style="font-family:'Barlow Condensed',sans-serif; font-size:2.5rem; font-weight:900; text-align:center; padding:12px; border:2px solid {{ match.home_color }}; border-radius:4px; height:auto;">
+                </div>
+                <div style="font-family:'Barlow Condensed',sans-serif; font-size:2rem; font-weight:900; color:var(--grey); padding-top:28px;">–</div>
+                <div style="text-align:center;">
+                    <label style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy); display:block; margin-bottom:8px;">{{ match.away_name }}</label>
+                    <input type="number" name="away_goals" id="away_goals"
+                           class="form-control"
+                           value="{{ match.away_goals if match.away_goals is not none else 0 }}"
+                           min="0" max="30" required
+                           style="font-family:'Barlow Condensed',sans-serif; font-size:2.5rem; font-weight:900; text-align:center; padding:12px; border:2px solid {{ match.away_color }}; border-radius:4px; height:auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GOAL SCORERS -->
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header" style="display:flex; align-items:center; justify-content:space-between;">
+            <span><span style="color:var(--lime); margin-right:8px;">&#9679;</span>Goal Scorers</span>
+            <button type="button" onclick="addGoalRow()"
+                    style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; padding:6px 14px; background:var(--lime); color:var(--navy); border:none; border-radius:3px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Scorer
+            </button>
+        </div>
+        <div style="padding:20px;" id="goalRows">
+            {% set existing_goals = existing_events | selectattr('event_type','eq','goal') | list %}
+            {% for ev in existing_goals %}
+            <div class="goal-row" style="display:grid; grid-template-columns:1fr 140px 36px; gap:10px; margin-bottom:10px; align-items:center;">
+                <select name="goal_player" class="form-select" onchange="setGoalTeam(this)">
+                    <option value="">— Select Player —</option>
+                    <optgroup label="{{ match.home_name }}">
+                        {% for p in home_players %}
+                        <option value="{{ p.id }}" data-team="{{ match.home_team_id }}" {% if p.id == ev.player_id %}selected{% endif %}>{{ p.name }} ({{ p.position }})</option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="{{ match.away_name }}">
+                        {% for p in away_players %}
+                        <option value="{{ p.id }}" data-team="{{ match.away_team_id }}" {% if p.id == ev.player_id %}selected{% endif %}>{{ p.name }} ({{ p.position }})</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+                <input type="hidden" name="goal_team" value="{{ ev.team_id }}">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:0.72rem; font-weight:700; color:var(--grey); white-space:nowrap;">Min</span>
+                    <input type="number" name="goal_minute" class="form-control" placeholder="45" min="1" max="120" value="{{ ev.minute if ev.minute else '' }}" style="text-align:center;">
+                </div>
+                <button type="button" onclick="this.closest('.goal-row').remove()"
+                        style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(224,43,43,0.08); color:var(--red); border:none; border-radius:3px; cursor:pointer; flex-shrink:0;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="padding:10px 20px 14px; border-top:1px solid rgba(26,31,94,0.06);">
+            <span style="font-size:0.75rem; color:var(--grey);">Add one row per goal. Players from both teams are shown.</span>
+        </div>
+    </div>
+
+    <!-- YELLOW CARDS -->
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header" style="display:flex; align-items:center; justify-content:space-between;">
+            <span><span style="color:#f5a623; margin-right:8px;">&#9632;</span>Yellow Cards</span>
+            <button type="button" onclick="addYCRow()"
+                    style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; padding:6px 14px; background:rgba(245,166,35,0.15); color:#7a5000; border:1px solid rgba(245,166,35,0.4); border-radius:3px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Card
+            </button>
+        </div>
+        <div style="padding:20px;" id="ycRows">
+            {% set existing_ycs = existing_events | selectattr('event_type','eq','yellow_card') | list %}
+            {% for ev in existing_ycs %}
+            <div class="yc-row" style="display:grid; grid-template-columns:1fr 140px 36px; gap:10px; margin-bottom:10px; align-items:center;">
+                <select name="yc_player" class="form-select" onchange="setYCTeam(this)">
+                    <option value="">— Select Player —</option>
+                    <optgroup label="{{ match.home_name }}">
+                        {% for p in home_players %}<option value="{{ p.id }}" data-team="{{ match.home_team_id }}" {% if p.id == ev.player_id %}selected{% endif %}>{{ p.name }} ({{ p.position }})</option>{% endfor %}
+                    </optgroup>
+                    <optgroup label="{{ match.away_name }}">
+                        {% for p in away_players %}<option value="{{ p.id }}" data-team="{{ match.away_team_id }}" {% if p.id == ev.player_id %}selected{% endif %}>{{ p.name }} ({{ p.position }})</option>{% endfor %}
+                    </optgroup>
+                </select>
+                <input type="hidden" name="yc_team" value="{{ ev.team_id }}">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:0.72rem; font-weight:700; color:var(--grey); white-space:nowrap;">Min</span>
+                    <input type="number" name="yc_minute" class="form-control" placeholder="67" min="1" max="120" value="{{ ev.minute if ev.minute else '' }}" style="text-align:center;">
+                </div>
+                <button type="button" onclick="this.closest('.yc-row').remove()"
+                        style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(224,43,43,0.08); color:var(--red); border:none; border-radius:3px; cursor:pointer;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- RED CARDS -->
+    <div class="card" style="margin-bottom:28px;">
+        <div class="card-header" style="display:flex; align-items:center; justify-content:space-between;">
+            <span><span style="color:var(--red); margin-right:8px;">&#9632;</span>Red Cards</span>
+            <button type="button" onclick="addRCRow()"
+                    style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; padding:6px 14px; background:rgba(224,43,43,0.1); color:#8b0000; border:1px solid rgba(224,43,43,0.3); border-radius:3px; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Card
+            </button>
+        </div>
+        <div style="padding:20px;" id="rcRows">
+            {% set existing_rcs = existing_events | selectattr('event_type','eq','red_card') | list %}
+            {% for ev in existing_rcs %}
+            <div class="rc-row" style="display:grid; grid-template-columns:1fr 36px; gap:10px; margin-bottom:10px; align-items:center;">
+                <select name="rc_player" class="form-select" onchange="setRCTeam(this)">
+                    <option value="">— Select Player —</option>
+                    <optgroup label="{{ match.home_name }}">
+                        {% for p in home_players %}<option value="{{ p.id }}" data-team="{{ match.home_team_id }}" {% if p.id == ev.player_id %}selected{% endif %}>{{ p.name }} ({{ p.position }})</option>{% endfor %}
+                    </optgroup>
+                    <optgroup label="{{ match.away_name }}">
+                        {% for p in away_players %}<option value="{{ p.id }}" data-team="{{ match.away_team_id }}" {% if p.id == ev.player_id %}selected{% endif %}>{{ p.name }} ({{ p.position }})</option>{% endfor %}
+                    </optgroup>
+                </select>
+                <input type="hidden" name="rc_team" value="{{ ev.team_id }}">
+                <button type="button" onclick="this.closest('.rc-row').remove()"
+                        style="display:flex; align-items:center; justify-content:center; width:36px; height:36px; background:rgba(224,43,43,0.08); color:var(--red); border:none; border-radius:3px; cursor:pointer;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- SUBMIT -->
+    <div style="display:flex; gap:12px; align-items:center;">
+        <button type="submit" class="btn btn-primary" style="padding:12px 36px; font-size:0.92rem; letter-spacing:0.1em; display:inline-flex; align-items:center; gap:10px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Save Result &amp; Apply Prize Money
+        </button>
+        <a href="{{ url_for('admin.matches', league=league) }}"
+           style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.85rem; letter-spacing:0.08em; text-transform:uppercase; padding:12px 24px; border:1.5px solid rgba(26,31,94,0.2); border-radius:3px; color:var(--grey); text-decoration:none;">
+            Cancel
+        </a>
+    </div>
+
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const HOME_TEAM_ID = {{ match.home_team_id }};
+const AWAY_TEAM_ID = {{ match.away_team_id }};
+const HOME_NAME    = "{{ match.home_name }}";
+const AWAY_NAME    = "{{ match.away_name }}";
+const HOME_PLAYERS = [{% for p in home_players %}{ id: {{ p.id }}, name: "{{ p.name }}", pos: "{{ p.position }}" },{% endfor %}];
+const AWAY_PLAYERS = [{% for p in away_players %}{ id: {{ p.id }}, name: "{{ p.name }}", pos: "{{ p.position }}" },{% endfor %}];
+
+function buildSelect(playerName, teamHiddenName) {
+    let s = `<select name="${playerName}" class="form-select" onchange="autoSetTeam(this,'${teamHiddenName}')">
+        <option value="">— Select Player —</option>
+        <optgroup label="${HOME_NAME}">`;
+    HOME_PLAYERS.forEach(p => s += `<option value="${p.id}" data-team="${HOME_TEAM_ID}">${p.name} (${p.pos})</option>`);
+    s += `</optgroup><optgroup label="${AWAY_NAME}">`;
+    AWAY_PLAYERS.forEach(p => s += `<option value="${p.id}" data-team="${AWAY_TEAM_ID}">${p.name} (${p.pos})</option>`);
+    s += `</optgroup></select>`;
+    return s;
+}
+
+function autoSetTeam(sel, hiddenName) {
+    const opt = sel.options[sel.selectedIndex];
+    const tid = opt ? (opt.dataset.team || '') : '';
+    const row = sel.closest('[class$="-row"]') || sel.closest('div');
+    const hidden = row ? row.querySelector(`input[name="${hiddenName}"]`) : null;
+    if (hidden) hidden.value = tid;
+}
+function setGoalTeam(s) { autoSetTeam(s, 'goal_team'); }
+function setYCTeam(s)   { autoSetTeam(s, 'yc_team'); }
+function setRCTeam(s)   { autoSetTeam(s, 'rc_team'); }
+
+const xBtn = `<button type="button" onclick="this.closest('[class$=\\'-row\\']').remove()"
+    style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:rgba(224,43,43,0.08);color:var(--red);border:none;border-radius:3px;cursor:pointer;flex-shrink:0;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>`;
+
+function addGoalRow() {
+    const d = document.createElement('div');
+    d.className = 'goal-row';
+    d.style.cssText = 'display:grid;grid-template-columns:1fr 140px 36px;gap:10px;margin-bottom:10px;align-items:center;';
+    d.innerHTML = buildSelect('goal_player','goal_team') +
+        `<input type="hidden" name="goal_team" value="">
+        <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.72rem;font-weight:700;color:var(--grey);white-space:nowrap;">Min</span>
+            <input type="number" name="goal_minute" class="form-control" placeholder="45" min="1" max="120" style="text-align:center;">
+        </div>` + xBtn;
+    document.getElementById('goalRows').appendChild(d);
+}
+
+function addYCRow() {
+    const d = document.createElement('div');
+    d.className = 'yc-row';
+    d.style.cssText = 'display:grid;grid-template-columns:1fr 140px 36px;gap:10px;margin-bottom:10px;align-items:center;';
+    d.innerHTML = buildSelect('yc_player','yc_team') +
+        `<input type="hidden" name="yc_team" value="">
+        <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.72rem;font-weight:700;color:var(--grey);white-space:nowrap;">Min</span>
+            <input type="number" name="yc_minute" class="form-control" placeholder="67" min="1" max="120" style="text-align:center;">
+        </div>` + xBtn;
+    document.getElementById('ycRows').appendChild(d);
+}
+
+function addRCRow() {
+    const d = document.createElement('div');
+    d.className = 'rc-row';
+    d.style.cssText = 'display:grid;grid-template-columns:1fr 36px;gap:10px;margin-bottom:10px;align-items:center;';
+    d.innerHTML = buildSelect('rc_player','rc_team') +
+        `<input type="hidden" name="rc_team" value="">` + xBtn;
+    document.getElementById('rcRows').appendChild(d);
+}
+</script>
+{% endblock %}

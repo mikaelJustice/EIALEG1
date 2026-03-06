@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+{% block title %}Set Lineup — Captain Portal{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Set Your <span style="color:var(--lime);">Lineup</span></h1>
+        <p style="font-size:0.78rem; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:0.12em; margin:6px 0 0;">
+            {{ team.name }} &middot; vs {{ match.away_name if match.home_team_id == team.id else match.home_name }}
+            &middot; {{ match.match_date[:10] }}
+        </p>
+    </div>
+</div>
+
+<div class="container" style="padding-top:32px; padding-bottom:60px;">
+
+    <form method="POST" id="lineupForm">
+        <input type="hidden" name="formation" id="formationInput" value="{{ saved_formation or '4-3-3' }}">
+        <!-- Hidden inputs for starter player IDs and positions will be written by JS on submit -->
+
+        <div class="row g-4">
+
+            <!-- LEFT: Formation Picker + Pitch -->
+            <div class="col-lg-8">
+
+                <!-- Formation selector -->
+                <div class="card" style="margin-bottom:20px; padding:0;">
+                    <div style="padding:18px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <span style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.85rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy);">Formation:</span>
+                        {% for f in ['4-3-3','4-4-2','4-2-3-1','3-5-2','5-3-2','3-4-3'] %}
+                        <button type="button" class="formation-btn" data-formation="{{ f }}"
+                                style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.08em; padding:8px 18px; border-radius:3px; cursor:pointer; transition:all 0.15s; border:2px solid {% if (saved_formation or '4-3-3') == f %}var(--navy){% else %}rgba(26,31,94,0.15){% endif %}; background:{% if (saved_formation or '4-3-3') == f %}var(--navy){% else %}white{% endif %}; color:{% if (saved_formation or '4-3-3') == f %}white{% else %}var(--navy){% endif %};">
+                            {{ f }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- PITCH -->
+                <div class="card" style="padding:0; overflow:hidden;">
+                    <div id="pitch" style="
+                        position:relative; width:100%; padding-bottom:135%;
+                        background: linear-gradient(180deg,
+                            #2d7a2d 0%, #2d7a2d 8%,
+                            #348c34 8%, #348c34 16%,
+                            #2d7a2d 16%, #2d7a2d 24%,
+                            #348c34 24%, #348c34 32%,
+                            #2d7a2d 32%, #2d7a2d 40%,
+                            #348c34 40%, #348c34 48%,
+                            #2d7a2d 48%, #2d7a2d 56%,
+                            #348c34 56%, #348c34 64%,
+                            #2d7a2d 64%, #2d7a2d 72%,
+                            #348c34 72%, #348c34 80%,
+                            #2d7a2d 80%, #2d7a2d 88%,
+                            #348c34 88%, #348c34 100%
+                        );
+                        border-radius:4px;
+                    ">
+                        <!-- Pitch markings SVG overlay -->
+                        <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;" viewBox="0 0 300 405" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Border -->
+                            <rect x="10" y="10" width="280" height="385" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                            <!-- Centre line -->
+                            <line x1="10" y1="202.5" x2="290" y2="202.5" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+                            <!-- Centre circle -->
+                            <circle cx="150" cy="202.5" r="40" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+                            <circle cx="150" cy="202.5" r="3" fill="rgba(255,255,255,0.7)"/>
+                            <!-- Penalty areas top -->
+                            <rect x="65" y="10" width="170" height="55" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+                            <rect x="100" y="10" width="100" height="25" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+                            <!-- Goal top -->
+                            <rect x="120" y="8" width="60" height="10" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                            <!-- Penalty areas bottom -->
+                            <rect x="65" y="340" width="170" height="55" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+                            <rect x="100" y="370" width="100" height="25" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+                            <!-- Goal bottom -->
+                            <rect x="120" y="397" width="60" height="10" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                            <!-- Penalty spots -->
+                            <circle cx="150" cy="50" r="2" fill="rgba(255,255,255,0.7)"/>
+                            <circle cx="150" cy="355" r="2" fill="rgba(255,255,255,0.7)"/>
+                        </svg>
+
+                        <!-- Player slots container — absolutely positioned over pitch -->
+                        <div id="pitchSlots" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div style="margin-top:12px; padding:12px 16px; background:rgba(26,31,94,0.04); border-radius:4px; border-left:3px solid var(--lime);">
+                    <span style="font-size:0.8rem; color:var(--grey);">
+                        <strong style="color:var(--navy);">How to use:</strong>
+                        Click a player from the squad list on the right, then click a position slot on the pitch to place them.
+                        Players in <strong>lime</strong> are starters. Drag to rearrange.
+                    </span>
+                </div>
+            </div>
+
+            <!-- RIGHT: Squad + Subs -->
+            <div class="col-lg-4">
+
+                <!-- STARTERS count indicator -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+                    <div style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:0.85rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--navy);">
+                        Squad Selection
+                    </div>
+                    <div id="starterCount" style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.82rem; padding:4px 12px; border-radius:2px; background:rgba(26,31,94,0.08); color:var(--navy);">
+                        0 / 11 starters
+                    </div>
+                </div>
+
+                <!-- Players by position -->
+                {% set positions = [('GK','Goalkeepers'),('DEF','Defenders'),('MID','Midfielders'),('FWD','Forwards')] %}
+                {% for pos, pos_label in positions %}
+                {% set pos_players = players | selectattr('position', 'eq', pos) | list %}
+                {% if pos_players %}
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.14em; color:var(--grey); margin-bottom:6px;">{{ pos_label }}</div>
+                    {% for p in pos_players %}
+                    <div class="squad-player" data-id="{{ p.id }}" data-name="{{ p.name }}" data-pos="{{ p.position }}" data-shirt="{{ p.shirt_number or '' }}"
+                         style="display:flex; align-items:center; gap:10px; padding:9px 12px; margin-bottom:4px; border-radius:4px; border:1.5px solid rgba(26,31,94,0.1); background:white; cursor:pointer; transition:all 0.15s; user-select:none;"
+                         onclick="selectPlayer(this)">
+                        <span class="badge-pos {{ p.position }}" style="font-size:0.62rem; padding:2px 6px; flex-shrink:0;">{{ p.position }}</span>
+                        {% if p.shirt_number %}<span style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:0.9rem; color:var(--grey); width:18px; text-align:right; flex-shrink:0;">{{ p.shirt_number }}</span>{% endif %}
+                        <span style="font-size:0.85rem; font-weight:600; flex:1; color:var(--navy);">{{ p.name }}</span>
+                        <span class="player-status" style="font-size:0.65rem; font-weight:700; padding:2px 7px; border-radius:2px; background:rgba(26,31,94,0.06); color:var(--grey);">Bench</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endfor %}
+
+                <!-- Submit button -->
+                <div style="margin-top:20px; position:sticky; bottom:20px;">
+                    <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; font-size:1rem; letter-spacing:0.08em;"
+                            onclick="prepareSubmit()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px;"><polyline points="20 6 9 17 4 12"/></svg>
+                        Submit Lineup
+                    </button>
+                    <a href="{{ url_for('captain.lineups') }}" style="display:block; text-align:center; margin-top:10px; font-size:0.8rem; color:var(--grey); text-decoration:none;">← Back to fixtures</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden inputs populated on submit -->
+        <div id="hiddenInputs"></div>
+    </form>
+</div>
+
+<style>
+.squad-player:hover { border-color:var(--lime) !important; }
+.squad-player.selected { background:rgba(184,212,0,0.15) !important; border-color:var(--lime) !important; }
+.squad-player.is-starter { background:rgba(184,212,0,0.1); border-color:var(--lime); }
+.squad-player.is-starter .player-status { background:rgba(184,212,0,0.25); color:#4a6000; }
+.squad-player.is-sub { background:rgba(245,166,35,0.08); border-color:rgba(245,166,35,0.4); }
+.squad-player.is-sub .player-status { background:rgba(245,166,35,0.2); color:#7a5000; content:'Sub'; }
+.pitch-slot { transition:all 0.15s; }
+.pitch-slot:hover { transform:scale(1.08); }
+.pitch-slot.occupied { cursor:default; }
+</style>
+
+<script>
+const FORMATION_LAYOUTS = {
+    '4-3-3': {
+        rows: [
+            { label:'GK',  slots:1 },
+            { label:'DEF', slots:4 },
+            { label:'MID', slots:3 },
+            { label:'FWD', slots:3 },
+        ]
+    },
+    '4-4-2': {
+        rows: [
+            { label:'GK',  slots:1 },
+            { label:'DEF', slots:4 },
+            { label:'MID', slots:4 },
+            { label:'FWD', slots:2 },
+        ]
+    },
+    '4-2-3-1': {
+        rows: [
+            { label:'GK',  slots:1 },
+            { label:'DEF', slots:4 },
+            { label:'DM',  slots:2 },
+            { label:'AM',  slots:3 },
+            { label:'FWD', slots:1 },
+        ]
+    },
+    '3-5-2': {
+        rows: [
+            { label:'GK',  slots:1 },
+            { label:'DEF', slots:3 },
+            { label:'MID', slots:5 },
+            { label:'FWD', slots:2 },
+        ]
+    },
+    '5-3-2': {
+        rows: [
+            { label:'GK',  slots:1 },
+            { label:'DEF', slots:5 },
+            { label:'MID', slots:3 },
+            { label:'FWD', slots:2 },
+        ]
+    },
+    '3-4-3': {
+        rows: [
+            { label:'GK',  slots:1 },
+            { label:'DEF', slots:3 },
+            { label:'MID', slots:4 },
+            { label:'FWD', slots:3 },
+        ]
+    },
+};
+
+const BADGE_COLORS = {GK:'#f5a623', DEF:'#27ae60', MID:'#1a1f5e', FWD:'#e02b2b'};
+const TEAM_COLOR   = '{{ team.badge_color }}';
+
+let currentFormation = '{{ saved_formation or "4-3-3" }}';
+let selectedPlayer   = null;   // currently clicked squad card
+let slotAssignments  = {};     // slot key → { id, name, pos, shirt }
+let playerSlot       = {};     // player id → slot key
+
+// Pre-load saved positions
+const savedPositions = {{ positions|tojson if positions is defined else '{}' }};
+const savedStarters  = {{ starter_ids|list|tojson if starter_ids is defined else '[]' }};
+const savedSubs      = {{ sub_ids|list|tojson if sub_ids is defined else '[]' }};
+
+function buildPitch(formation) {
+    const layout  = FORMATION_LAYOUTS[formation];
+    const pitch   = document.getElementById('pitchSlots');
+    pitch.innerHTML = '';
+    slotAssignments = {};
+
+    // Rows go from GK (bottom) to FWD (top) visually
+    const rows = [...layout.rows].reverse();
+    const rowCount = rows.length;
+
+    rows.forEach((row, ri) => {
+        const yPct = 8 + (ri / (rowCount)) * 82;
+        for (let si = 0; si < row.slots; si++) {
+            const xPct = (si + 1) / (row.slots + 1) * 100;
+            const slotKey = `${ri}_${si}`;
+
+            const slot = document.createElement('div');
+            slot.className = 'pitch-slot';
+            slot.dataset.slot = slotKey;
+            slot.dataset.row = ri;
+            slot.dataset.col = si;
+            slot.dataset.rowLabel = row.label;
+            slot.style.cssText = `
+                position:absolute;
+                left:${xPct}%;
+                top:${yPct}%;
+                transform:translate(-50%,-50%);
+                width:52px;
+                text-align:center;
+                cursor:pointer;
+                z-index:10;
+            `;
+            slot.innerHTML = `
+                <div class="slot-circle" style="
+                    width:44px; height:44px; border-radius:50%;
+                    border:2.5px dashed rgba(255,255,255,0.5);
+                    background:rgba(0,0,0,0.25);
+                    margin:0 auto 3px;
+                    display:flex; align-items:center; justify-content:center;
+                    font-size:0.62rem; font-weight:700; color:rgba(255,255,255,0.6);
+                    transition:all 0.15s;
+                ">${row.label}</div>
+                <div class="slot-name" style="font-size:0.6rem; color:rgba(255,255,255,0.0); font-weight:700; line-height:1.2; text-shadow:0 1px 3px rgba(0,0,0,0.8);"></div>
+            `;
+            slot.addEventListener('click', () => onSlotClick(slot));
+            pitch.appendChild(slot);
+        }
+    });
+}
+
+function onSlotClick(slot) {
+    const slotKey = slot.dataset.slot;
+
+    if (slotAssignments[slotKey]) {
+        // Remove player from this slot
+        const p = slotAssignments[slotKey];
+        delete playerSlot[p.id];
+        delete slotAssignments[slotKey];
+        renderSlot(slot, null, slot.dataset.rowLabel);
+        updateSquadCard(p.id, 'bench');
+        updateStarterCount();
+        return;
+    }
+
+    if (!selectedPlayer) return;
+    const pid = selectedPlayer.dataset.id;
+
+    // If player already placed, remove from old slot
+    if (playerSlot[pid]) {
+        const oldSlot = document.querySelector(`[data-slot="${playerSlot[pid]}"]`);
+        delete slotAssignments[playerSlot[pid]];
+        if (oldSlot) renderSlot(oldSlot, null, oldSlot.dataset.rowLabel);
+    }
+
+    // Place on new slot
+    const pData = {
+        id: pid,
+        name: selectedPlayer.dataset.name,
+        pos: selectedPlayer.dataset.pos,
+        shirt: selectedPlayer.dataset.shirt
+    };
+    slotAssignments[slotKey] = pData;
+    playerSlot[pid] = slotKey;
+    renderSlot(slot, pData, slot.dataset.rowLabel);
+    updateSquadCard(pid, 'starter');
+    selectedPlayer.classList.remove('selected');
+    selectedPlayer = null;
+    updateStarterCount();
+}
+
+function renderSlot(slot, player, rowLabel) {
+    const circle = slot.querySelector('.slot-circle');
+    const nameDiv = slot.querySelector('.slot-name');
+    if (!player) {
+        circle.style.background = 'rgba(0,0,0,0.25)';
+        circle.style.border = '2.5px dashed rgba(255,255,255,0.5)';
+        circle.style.color = 'rgba(255,255,255,0.6)';
+        circle.innerHTML = rowLabel;
+        nameDiv.textContent = '';
+        nameDiv.style.color = 'rgba(255,255,255,0)';
+    } else {
+        const bg = BADGE_COLORS[player.pos] || TEAM_COLOR;
+        circle.style.background = bg;
+        circle.style.border = '2.5px solid rgba(255,255,255,0.9)';
+        circle.style.color = 'white';
+        circle.innerHTML = player.shirt
+            ? `<span style="font-family:'Barlow Condensed',sans-serif; font-size:1rem; font-weight:900;">${player.shirt}</span>`
+            : `<span style="font-size:0.55rem; font-weight:800;">${player.name.split(' ').pop().substring(0,5).toUpperCase()}</span>`;
+        nameDiv.textContent = player.name.split(' ').pop();
+        nameDiv.style.color = 'white';
+    }
+}
+
+function selectPlayer(card) {
+    // Deselect previous
+    if (selectedPlayer) selectedPlayer.classList.remove('selected');
+    if (selectedPlayer === card) { selectedPlayer = null; return; }
+    selectedPlayer = card;
+    card.classList.add('selected');
+}
+
+function updateSquadCard(pid, status) {
+    const card = document.querySelector(`.squad-player[data-id="${pid}"]`);
+    if (!card) return;
+    card.classList.remove('is-starter','is-sub');
+    const badge = card.querySelector('.player-status');
+    if (status === 'starter') {
+        card.classList.add('is-starter');
+        badge.textContent = 'Starting';
+    } else if (status === 'sub') {
+        card.classList.add('is-sub');
+        badge.textContent = 'Sub';
+    } else {
+        badge.textContent = 'Bench';
+    }
+}
+
+function updateStarterCount() {
+    const n = Object.keys(slotAssignments).length;
+    document.getElementById('starterCount').textContent = `${n} / 11 starters`;
+    document.getElementById('starterCount').style.background = n === 11 ? 'rgba(184,212,0,0.2)' : 'rgba(26,31,94,0.08)';
+    document.getElementById('starterCount').style.color = n === 11 ? '#4a6000' : 'var(--navy)';
+}
+
+function setFormation(f) {
+    currentFormation = f;
+    document.getElementById('formationInput').value = f;
+    // Clear pitch but keep player→slot mapping awareness
+    slotAssignments = {};
+    playerSlot = {};
+    // Reset all squad cards
+    document.querySelectorAll('.squad-player').forEach(c => {
+        c.classList.remove('is-starter','is-sub','selected');
+        c.querySelector('.player-status').textContent = 'Bench';
+    });
+    buildPitch(f);
+    updateStarterCount();
+
+    // Update buttons
+    document.querySelectorAll('.formation-btn').forEach(btn => {
+        const active = btn.dataset.formation === f;
+        btn.style.background = active ? 'var(--navy)' : 'white';
+        btn.style.color = active ? 'white' : 'var(--navy)';
+        btn.style.borderColor = active ? 'var(--navy)' : 'rgba(26,31,94,0.15)';
+    });
+}
+
+function prepareSubmit() {
+    const container = document.getElementById('hiddenInputs');
+    container.innerHTML = '';
+
+    // Add starters with positions
+    Object.entries(slotAssignments).forEach(([slotKey, p]) => {
+        const parts = slotKey.split('_');
+        const row = parts[0], col = parts[1];
+
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = 'starters'; inp.value = p.id;
+        container.appendChild(inp);
+
+        const pos = document.createElement('input');
+        pos.type = 'hidden'; pos.name = `starter_pos_${p.id}`; pos.value = `${row},${col},0`;
+        container.appendChild(pos);
+    });
+
+    // Add subs (squad players not in starters)
+    const starterIds = new Set(Object.values(slotAssignments).map(p => p.id));
+    document.querySelectorAll('.squad-player').forEach(card => {
+        if (!starterIds.has(card.dataset.id)) {
+            const inp = document.createElement('input');
+            inp.type = 'hidden'; inp.name = 'subs'; inp.value = card.dataset.id;
+            container.appendChild(inp);
+        }
+    });
+}
+
+// Formation button listeners
+document.querySelectorAll('.formation-btn').forEach(btn => {
+    btn.addEventListener('click', () => setFormation(btn.dataset.formation));
+});
+
+// Initialise pitch
+buildPitch(currentFormation);
+
+// Restore saved lineup if exists
+if (savedStarters && savedStarters.length > 0) {
+    // We can't perfectly restore positions without slot data, but mark them
+    savedStarters.forEach(pid => updateSquadCard(pid, 'starter'));
+    savedSubs.forEach(pid => updateSquadCard(pid, 'sub'));
+}
+updateStarterCount();
+</script>
+{% endblock %}

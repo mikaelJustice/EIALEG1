@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}Home — EIA Football League{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-pitch-lines"></div>
+    <div class="hero-glow"></div>
+    <div class="container position-relative">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <p class="hero-subtitle">Empower International Academy</p>
+                <h1 class="hero-title">EIA <span class="accent">Football</span><br>League</h1>
+
+                <!-- LEAGUE SWITCHER -->
+                <div style="display:flex; gap:10px; margin-bottom:28px; flex-wrap:wrap;">
+                    <a href="{{ url_for('public.home', league='boys') }}"
+                       style="display:inline-flex; align-items:center; gap:8px; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.12em; text-transform:uppercase; padding:10px 22px; border-radius:4px; text-decoration:none; transition:all 0.2s;
+                           {% if league == 'boys' %}background:var(--lime); color:var(--navy); box-shadow:0 4px 16px rgba(184,212,0,0.35);
+                           {% else %}background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); border:1.5px solid rgba(255,255,255,0.15);{% endif %}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        Boys League
+                    </a>
+                    <a href="{{ url_for('public.home', league='girls') }}"
+                       style="display:inline-flex; align-items:center; gap:8px; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:0.88rem; letter-spacing:0.12em; text-transform:uppercase; padding:10px 22px; border-radius:4px; text-decoration:none; transition:all 0.2s;
+                           {% if league == 'girls' %}background:var(--lime); color:var(--navy); box-shadow:0 4px 16px rgba(184,212,0,0.35);
+                           {% else %}background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.7); border:1.5px solid rgba(255,255,255,0.15);{% endif %}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        Girls League
+                    </a>
+                </div>
+
+                <div class="hero-ctas">
+                    <a href="{{ url_for('public.league_table', league=league) }}" class="btn-hero-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+                        View Table
+                    </a>
+                    <a href="{{ url_for('public.fixtures', league=league) }}" class="btn-hero-outline">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        Fixtures
+                    </a>
+                    <a href="{{ url_for('public.scorers', league=league) }}" class="btn-hero-outline">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        Stats
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-flex justify-content-center">
+                <div style="position:relative; width:260px; height:260px; opacity:0.18;">
+                    <svg viewBox="0 0 260 260" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+                        <circle cx="130" cy="130" r="125" stroke="#b8d400" stroke-width="3"/>
+                        <circle cx="130" cy="130" r="40" stroke="#b8d400" stroke-width="2"/>
+                        <circle cx="130" cy="130" r="5" fill="#b8d400"/>
+                        <line x1="5" y1="130" x2="255" y2="130" stroke="#b8d400" stroke-width="2"/>
+                        <rect x="5" y="85" width="48" height="90" stroke="#b8d400" stroke-width="2"/>
+                        <rect x="207" y="85" width="48" height="90" stroke="#b8d400" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- LEAGUE BADGE STRIP -->
+<div style="background:var(--navy); border-top:3px solid var(--lime); border-bottom:1px solid rgba(255,255,255,0.06); padding:14px 0;">
+    <div class="container">
+        <div style="display:flex; align-items:center; justify-content:center; gap:32px; flex-wrap:wrap;">
+            <span style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.05rem; letter-spacing:0.12em; text-transform:uppercase; color:white;">
+                {% if league == 'girls' %}
+                    <span style="color:var(--lime);">◆</span> Girls League 2024/25 <span style="color:var(--lime);">◆</span>
+                {% else %}
+                    <span style="color:var(--lime);">◆</span> Boys League 2024/25 <span style="color:var(--lime);">◆</span>
+                {% endif %}
+            </span>
+            <a href="{{ url_for('public.home', league='girls' if league=='boys' else 'boys') }}"
+               style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:0.78rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--lime); text-decoration:none; padding:5px 14px; border:1.5px solid var(--lime); border-radius:2px;">
+                Switch to {{ 'Girls' if league=='boys' else 'Boys' }} League →
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding-top:40px; padding-bottom:60px;">
+    <div class="row g-4">
+
+        <!-- LEAGUE TABLE MINI -->
+        <div class="col-lg-4">
+            <div class="section-label">League Table</div>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Standings</span>
+                    <a href="{{ url_for('public.league_table', league=league) }}" class="btn-sm-link">Full Table</a>
+                </div>
+                <div style="overflow:auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:36px;">#</th>
+                                <th>Club</th>
+                                <th class="text-center">P</th>
+                                <th class="text-center pts-col">Pts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in table %}
+                            <tr>
+                                <td style="font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:1rem;">
+                                    {% if loop.index == 1 %}<span class="pos-champ table-position-bar"></span>{% elif loop.index <= 3 %}<span class="pos-top table-position-bar"></span>{% else %}{{ loop.index }}{% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="team-badge" style="background:{{ row.team.badge_color }}; width:28px; height:28px; font-size:0.62rem;">{{ row.team.short_name[:2] }}</div>
+                                        <a href="{{ url_for('public.team_detail', team_id=row.team.id) }}" style="font-weight:600; font-size:0.88rem; color:var(--navy); text-decoration:none;">{{ row.team.name }}</a>
+                                    </div>
+                                </td>
+                                <td class="text-center" style="font-size:0.88rem; color:var(--grey);">{{ row.played }}</td>
+                                <td class="text-center pts">{{ row.points }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center py-3" style="color:var(--grey); font-size:0.85rem;">No teams yet</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Scorers -->
+            <div style="margin-top:24px;">
+                <div class="section-label">Top Scorers</div>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Scorers</span>
+                        <a href="{{ url_for('public.scorers', league=league) }}" class="btn-sm-link">All Stats</a>
+                    </div>
+                    {% for p in top_scorers %}
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid rgba(26,31,94,0.06);">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1rem; color:var(--grey); width:18px;">{{ loop.index }}</span>
+                            <div>
+                                <div style="font-weight:600; font-size:0.88rem;">{{ p.name }}</div>
+                                <div style="font-size:0.72rem; color:var(--grey); text-transform:uppercase; letter-spacing:0.06em;">{{ p.team_name or '–' }}</div>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:1.6rem; color:var(--navy);">{{ p.goals }}</span>
+                            <span style="font-size:0.7rem; color:var(--grey); margin-left:3px; text-transform:uppercase; letter-spacing:0.06em;">g</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div style="padding:20px; text-align:center; color:var(--grey); font-size:0.85rem;">No goals recorded yet</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- RECENT RESULTS -->
+        <div class="col-lg-4">
+            <div class="section-label">Recent Results</div>
+            <div class="card h-auto">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Results</span>
+                    <a href="{{ url_for('public.results', league=league) }}" class="btn-sm-link">All Results</a>
+                </div>
+                {% for match in recent_results %}
+                <div class="match-row">
+                    <div style="flex:1; text-align:right; min-width:0;">
+                        <div style="font-weight:600; font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ match.home_name }}</div>
+                        <div class="team-badge ms-auto mt-1" style="background:{{ match.home_color }}; width:26px; height:26px; font-size:0.58rem; margin-left:auto;">{{ match.home_name[:3].upper() }}</div>
+                    </div>
+                    <div class="score-box mx-3" style="font-size:1.25rem; padding:6px 14px;">{{ match.home_goals }}–{{ match.away_goals }}</div>
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-weight:600; font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ match.away_name }}</div>
+                        <div class="team-badge mt-1" style="background:{{ match.away_color }}; width:26px; height:26px; font-size:0.58rem;">{{ match.away_name[:3].upper() }}</div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="padding:32px; text-align:center; color:var(--grey); font-size:0.85rem;">No results yet</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- UPCOMING + NEWS -->
+        <div class="col-lg-4">
+            <div class="section-label">Upcoming Fixtures</div>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Next Matches</span>
+                    <a href="{{ url_for('public.fixtures', league=league) }}" class="btn-sm-link">All Fixtures</a>
+                </div>
+                {% for match in upcoming %}
+                <div style="padding:14px 20px; border-bottom:1px solid rgba(26,31,94,0.06);">
+                    <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.88rem; font-weight:600;">
+                        <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ match.home_name }}</span>
+                        <span style="font-family:'Barlow Condensed',sans-serif; font-weight:900; font-size:0.9rem; padding:0 10px; color:var(--grey); flex-shrink:0;">VS</span>
+                        <span style="flex:1; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ match.away_name }}</span>
+                    </div>
+                    <div style="text-align:center; margin-top:5px;">
+                        <span class="match-date-pill">{{ match.match_date[:16] }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div style="padding:24px; text-align:center; color:var(--grey); font-size:0.85rem;">No upcoming fixtures</div>
+                {% endfor %}
+            </div>
+
+            <div style="margin-top:24px;">
+                <div class="section-label">Latest News</div>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>News</span>
+                        <a href="{{ url_for('public.news', league=league) }}" class="btn-sm-link">All News</a>
+                    </div>
+                    {% for article in news %}
+                    <a href="{{ url_for('public.news_detail', news_id=article.id) }}" style="text-decoration:none; display:block;">
+                        <div style="padding:14px 20px; border-bottom:1px solid rgba(26,31,94,0.06); transition:background 0.15s;" onmouseover="this.style.background='rgba(184,212,0,0.05)'" onmouseout="this.style.background=''">
+                            <span style="font-family:'Barlow Condensed',sans-serif; font-size:0.68rem; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; padding:2px 7px; border-radius:2px;
+                                {% if article.category=='transfer' %}background:rgba(245,166,35,0.15); color:#7a5000;
+                                {% elif article.category=='match' %}background:rgba(184,212,0,0.15); color:#4a6000;
+                                {% elif article.category=='announcement' %}background:rgba(224,43,43,0.12); color:#8b0000;
+                                {% else %}background:rgba(26,31,94,0.08); color:var(--navy);{% endif %}">
+                                {{ article.category }}
+                            </span>
+                            <p style="margin:6px 0 3px; font-weight:600; font-size:0.88rem; color:var(--navy);">{{ article.title }}</p>
+                            <span style="font-size:0.7rem; color:var(--grey); text-transform:uppercase; letter-spacing:0.06em;">{{ article.created_at|fmtdt|truncate(10,True,"") }}</span>
+                        </div>
+                    </a>
+                    {% else %}
+                    <div style="padding:24px; text-align:center; color:var(--grey); font-size:0.85rem;">No news yet</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
